@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>Attendance System</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#home" class="nav-link active" onclick="showSection('home')">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#attendance" class="nav-link" onclick="showSection('attendance')">Attendance List</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#add-student" class="nav-link" onclick="showSection('add-student')">Add Student</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#reports" class="nav-link" onclick="showSection('reports')">Reports</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#logout" class="nav-link logout" onclick="logout()">Logout</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+
+    <div class="container">
+
+        <section id="home" class="content-section active">
+            <h1>Welcome to Student Attendance System</h1>
+            <p>Track and manage student attendance efficiently.</p>
+            <div class="dashboard-cards">
+                <div class="card">
+                    <h3>Total Students</h3>
+                    <p class="card-number">25</p>
+                </div>
+                <div class="card">
+                    <h3>Today's Attendance</h3>
+                    <p class="card-number">22</p>
+                </div>
+                <div class="card">
+                    <h3>Attendance Rate</h3>
+                    <p class="card-number">88%</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="attendance" class="content-section">
+            <h1>Student Attendance</h1>
+            <div class="table-container">
+                <table class="attendance-table" id="attendanceTable">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">Last Name</th>
+                            <th rowspan="2">First Name</th>
+                            <th colspan="2">S1</th>
+                            <th colspan="2">S2</th>
+                            <th colspan="2">S3</th>
+                            <th colspan="2">S4</th>
+                            <th colspan="2">S5</th>
+                            <th colspan="2">S6</th>
+                            <th rowspan="2">Absences</th>
+                            <th rowspan="2">Participation</th>
+                            <th rowspan="2">Message</th>
+                        </tr>
+                        <tr>
+                            <th class="sub-header">P</th>
+                            <th class="sub-header">Pa</th>
+                            <th class="sub-header">P</th>
+                            <th class="sub-header">Pa</th>
+                            <th class="sub-header">P</th>
+                            <th class="sub-header">Pa</th>
+                            <th class="sub-header">P</th>
+                            <th class="sub-header">Pa</th>
+                            <th class="sub-header">P</th>
+                            <th class="sub-header">Pa</th>
+                            <th class="sub-header">P</th>
+                            <th class="sub-header">Pa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-tbody">
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn-report" id="showReportBtn">Show Detailed Report</button>
+            </div>
+        </section>
+
+
+        <section id="add-student" class="content-section">
+            <h1>Add New Student</h1>
+            <div id="successMessage" class="success-message"></div>
+            <form class="student-form" id="studentForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="studentId">Student ID *</label>
+                        <input type="text" id="studentId" name="studentId">
+                        <span class="error-message" id="studentIdError">Student ID must contain only numbers</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name *</label>
+                        <input type="text" id="lastName" name="lastName">
+                        <span class="error-message" id="lastNameError">Last name must contain only letters</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="firstName">First Name *</label>
+                        <input type="text" id="firstName" name="firstName">
+                        <span class="error-message" id="firstNameError">First name must contain only letters</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email">
+                        <span class="error-message" id="emailError">Please enter a valid email address</span>
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <h4>Session Attendance (P = Presence)</h4>
+                    <div class="sessions-grid">
+                        <div class="session-box">
+                            <h5>Session 1</h5>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s1_p" name="s1_p">
+                                <label for="s1_p">P</label>
+                            </div>
+                        </div>
+                        <div class="session-box">
+                            <h5>Session 2</h5>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s2_p" name="s2_p">
+                                <label for="s2_p">P</label>
+                            </div>
+                        </div>
+                        <div class="session-box">
+                            <h5>Session 3</h5>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s3_p" name="s3_p">
+                                <label for="s3_p">P</label>
+                            </div>
+                        </div>
+                        <div class="session-box">
+                            <h5>Session 4</h5>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s4_p" name="s4_p">
+                                <label for="s4_p">P</label>
+                            </div>
+                        </div>
+                        <div class="session-box">
+                            <h5>Session 5</h5>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s5_p" name="s5_p">
+                                <label for="s5_p">P</label>
+                            </div>
+                        </div>
+                        <div class="session-box">
+                            <h5>Session 6</h5>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s6_p" name="s6_p">
+                                <label for="s6_p">P</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <h4>Session Participation (Pa = Participation)</h4>
+                    <div class="sessions-grid">
+                        <div class="session-box">
+                            <h5>Session 1</h5>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s1_pa" name="s1_pa">
+                                <label for="s1_pa">Pa</label>
+                            </div>
+                        </div>
+                        <div class="session-box">
+                            <h5>Session 2</h5>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s2_pa" name="s2_pa">
+                                <label for="s2_pa">Pa</label>
+                            </div>
+                        </div>
+                        <div class="session-box">
+                            <h5>Session 3</h5>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s3_pa" name="s3_pa">
+                                <label for="s3_pa">Pa</label>
+                            </div>
+                        </div>
+                        <div class="session-box">
+                            <h5>Session 4</h5>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s4_pa" name="s4_pa">
+                                <label for="s4_pa">Pa</label>
+                            </div>
+                        </div>
+                        <div class="session-box">
+                            <h5>Session 5</h5>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s5_pa" name="s5_pa">
+                                <label for="s5_pa">Pa</label>
+                            </div>
+                        </div>
+                        <div class="session-box">
+                            <h5>Session 6</h5>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="s6_pa" name="s6_pa">
+                                <label for="s6_pa">Pa</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Add Student</button>
+            </form>
+        </section>
+
+        <section id="reports" class="content-section">
+            <h1>Attendance Reports</h1>
+            <div class="reports-container">
+                <div class="report-card">
+                    <h3>Daily Report</h3>
+                    <p>Generate daily attendance summary</p>
+                    <button class="btn-report" onclick="generateReport('daily')">Generate</button>
+                </div>
+                <div class="report-card">
+                    <h3>Weekly Report</h3>
+                    <p>Generate weekly attendance summary</p>
+                    <button class="btn-report" onclick="generateReport('weekly')">Generate</button>
+                </div>
+                <div class="report-card">
+                    <h3>Monthly Report</h3>
+                    <p>Generate monthly attendance summary</p>
+                    <button class="btn-report" onclick="generateReport('monthly')">Generate</button>
+                </div>
+            </div>
+
+            <div id="detailedReportSection" class="detailed-report-section">
+                <h2 style="color: #2c3e50; margin-bottom: 20px;">Detailed Attendance Statistics</h2>
+                
+                <div class="report-stats">
+                    <div class="stat-card">
+                        <h3>Total Students</h3>
+                        <div class="stat-number" id="totalStudentsDetailed">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Students Present</h3>
+                        <div class="stat-number" id="studentsPresentDetailed">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Students Participated</h3>
+                        <div class="stat-number" id="studentsParticipatedDetailed">0</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">Attendance Statistics Chart</div>
+                    <div class="bar-chart" id="barChart"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
