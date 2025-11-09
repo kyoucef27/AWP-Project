@@ -62,6 +62,21 @@
 
         <section id="attendance" class="content-section">
             <h1>Student Attendance</h1>
+            
+            <div class="search-sort-controls">
+                <div class="search-container">
+                    <label for="searchName">Search by Name:</label>
+                    <input type="text" id="searchName" placeholder="Enter student name..." class="search-input">
+                </div>
+                
+                <div class="sort-buttons">
+                    <button class="btn-sort" id="sortAbsencesAsc">Sort by Absences (Ascending)</button>
+                    <button class="btn-sort" id="sortParticipationDesc">Sort by Participation (Descending)</button>
+                </div>
+            </div>
+
+            <div class="sort-status" id="sortStatus">Ready to search or sort</div>
+            
             <div class="table-container">
                 <table class="attendance-table" id="attendanceTable">
                     <thead>
@@ -97,8 +112,10 @@
                     </tbody>
                 </table>
             </div>
-            <div style="margin-top: 20px; text-align: center;">
-                <button class="btn-report" id="showReportBtn">Show Detailed Report</button>
+            <div style="margin-top: 20px; text-align: center; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button class="btn-report" id="showReportBtn">Show Report</button>
+                <button class="btn-highlight" id="highlightExcellentBtn">Highlight Excellent Students</button>
+                <button class="btn-reset" id="resetColorsBtn">Reset Colors</button>
             </div>
         </section>
 
@@ -130,101 +147,9 @@
                     </div>
                 </div>
 
-                <div class="checkbox-group">
-                    <h4>Session Attendance (P = Presence)</h4>
-                    <div class="sessions-grid">
-                        <div class="session-box">
-                            <h5>Session 1</h5>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s1_p" name="s1_p">
-                                <label for="s1_p">P</label>
-                            </div>
-                        </div>
-                        <div class="session-box">
-                            <h5>Session 2</h5>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s2_p" name="s2_p">
-                                <label for="s2_p">P</label>
-                            </div>
-                        </div>
-                        <div class="session-box">
-                            <h5>Session 3</h5>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s3_p" name="s3_p">
-                                <label for="s3_p">P</label>
-                            </div>
-                        </div>
-                        <div class="session-box">
-                            <h5>Session 4</h5>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s4_p" name="s4_p">
-                                <label for="s4_p">P</label>
-                            </div>
-                        </div>
-                        <div class="session-box">
-                            <h5>Session 5</h5>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s5_p" name="s5_p">
-                                <label for="s5_p">P</label>
-                            </div>
-                        </div>
-                        <div class="session-box">
-                            <h5>Session 6</h5>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s6_p" name="s6_p">
-                                <label for="s6_p">P</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="checkbox-group">
-                    <h4>Session Participation (Pa = Participation)</h4>
-                    <div class="sessions-grid">
-                        <div class="session-box">
-                            <h5>Session 1</h5>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s1_pa" name="s1_pa">
-                                <label for="s1_pa">Pa</label>
-                            </div>
-                        </div>
-                        <div class="session-box">
-                            <h5>Session 2</h5>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s2_pa" name="s2_pa">
-                                <label for="s2_pa">Pa</label>
-                            </div>
-                        </div>
-                        <div class="session-box">
-                            <h5>Session 3</h5>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s3_pa" name="s3_pa">
-                                <label for="s3_pa">Pa</label>
-                            </div>
-                        </div>
-                        <div class="session-box">
-                            <h5>Session 4</h5>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s4_pa" name="s4_pa">
-                                <label for="s4_pa">Pa</label>
-                            </div>
-                        </div>
-                        <div class="session-box">
-                            <h5>Session 5</h5>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s5_pa" name="s5_pa">
-                                <label for="s5_pa">Pa</label>
-                            </div>
-                        </div>
-                        <div class="session-box">
-                            <h5>Session 6</h5>
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="s6_pa" name="s6_pa">
-                                <label for="s6_pa">Pa</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <p style="color: #7f8c8d; font-size: 0.95rem; margin-bottom: 20px;">
+                    <strong>Note:</strong> Attendance and participation for each session can be marked in the Attendance List after adding the student.
+                </p>
 
                 <button type="submit" class="btn-submit">Add Student</button>
             </form>
@@ -276,6 +201,7 @@
         </section>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

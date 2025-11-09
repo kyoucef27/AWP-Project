@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeAttendanceTable();
     setupFormValidation();
     setupReportButton();
+    setupJQueryFeatures();
     showSection('home');
     updateDashboardStats();
 });
@@ -124,6 +125,7 @@ function addStudentToAttendanceTable(student) {
 
     const row = document.createElement('tr');
     row.className = statusClass;
+    row.setAttribute('data-student', `${student.lastName}-${student.firstName}`);
 
     let html = `
         <td class="name-cell">${student.lastName}</td>
@@ -132,15 +134,16 @@ function addStudentToAttendanceTable(student) {
 
     for (let i = 1; i <= 6; i++) {
         const session = student.sessions[`s${i}`];
+        const studentId = `${student.lastName}-${student.firstName}`.replace(/\s/g, '-');
         html += `
-            <td>${session.p ? '✓' : '✗'}</td>
-            <td>${session.pa ? '✓' : '✗'}</td>
+            <td><input type="checkbox" class="attendance-checkbox" data-session="s${i}" data-type="p" ${session.p ? 'checked' : ''} onchange="updateAttendance(this)"></td>
+            <td><input type="checkbox" class="attendance-checkbox" data-session="s${i}" data-type="pa" ${session.pa ? 'checked' : ''} onchange="updateAttendance(this)"></td>
         `;
     }
 
     html += `
-        <td><strong>${stats.absences}</strong></td>
-        <td><strong>${stats.participations}</strong></td>
+        <td class="absences-cell"><strong>${stats.absences}</strong></td>
+        <td class="participation-cell"><strong>${stats.participations}</strong></td>
         <td class="message-cell">${message}</td>
     `;
 
@@ -210,8 +213,8 @@ function setupFormValidation() {
             const sessions = {};
             for (let i = 1; i <= 6; i++) {
                 sessions[`s${i}`] = {
-                    p: document.getElementById(`s${i}_p`).checked,
-                    pa: document.getElementById(`s${i}_pa`).checked
+                    p: false,
+                    pa: false
                 };
             }
 
@@ -222,87 +225,18 @@ function setupFormValidation() {
             };
 
             addStudentToAttendanceTable(newStudent);
-            showSuccessMessage('Student successfully added!');
+            showSuccessMessage('Student successfully added! You can now mark their attendance in the Attendance List.');
             updateDashboardStats();
             this.reset();
             
             setTimeout(() => {
                 showSection('attendance');
-            }, 1000);
+            }, 1500);
         });
     }
 }
 
-function addStudent(event) {
-    event.preventDefault();
-    
-    const formData = new FormData(event.target);
-    const studentData = {
-        studentId: formData.get('studentId'),
-        lastName: formData.get('lastName'),
-        firstName: formData.get('firstName'),
-        course: formData.get('course'),
-        present: formData.get('present'),
-        participated: formData.get('participated'),
-        sessionDate: formData.get('sessionDate')
-    };
 
-    if (!validateStudentData(studentData)) {
-        return;
-    }
-
-    addStudentToTable(studentData);
-    
-    event.target.reset();
-    
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('sessionDate').value = today;
-    
-    showMessage('Student added successfully!', 'success');
-    
-    showSection('attendance');
-}
-function validateStudentData(data) {
-    const existingRows = document.querySelectorAll('#attendance-tbody tr');
-    for (let row of existingRows) {
-        const existingId = row.cells[0].textContent.trim();
-        if (existingId === data.studentId) {
-            showMessage('Student ID already exists!', 'error');
-            return false;
-        }
-    }
-
-    const requiredFields = ['studentId', 'lastName', 'firstName', 'course', 'present', 'participated', 'sessionDate'];
-    for (let field of requiredFields) {
-        if (!data[field] || data[field].trim() === '') {
-            showMessage(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()} field.`, 'error');
-            return false;
-        }
-    }
-
-    return true;
-}
-
-function addStudentToTable(studentData) {
-    const tbody = document.getElementById('attendance-tbody');
-    const newRow = document.createElement('tr');
-    
-    const presentClass = studentData.present === 'Yes' ? 'present' : 'absent';
-    const participatedClass = studentData.participated === 'Yes' ? 'participated' : 'not-participated';
-    
-    newRow.innerHTML = `
-        <td>${studentData.studentId}</td>
-        <td>${studentData.lastName}</td>
-        <td>${studentData.firstName}</td>
-        <td>${studentData.course}</td>
-        <td><span class="status ${presentClass}">${studentData.present}</span></td>
-        <td><span class="status ${participatedClass}">${studentData.participated}</span></td>
-        <td>${studentData.sessionDate}</td>
-    `;
-    
-    tbody.appendChild(newRow);
-    updateDashboardStats();
-}
 function updateDashboardStats() {
     const rows = document.querySelectorAll('#attendance-tbody tr');
     const totalStudents = rows.length;
@@ -337,20 +271,23 @@ function generateDetailedReport() {
     let studentsParticipated = 0;
 
     for (let i = 0; i < rows.length; i++) {
-        const cells = rows[i].getElementsByTagName('td');
+        const row = rows[i];
+        const checkboxes = row.querySelectorAll('.attendance-checkbox');
         
         let hasPresence = false;
         let hasParticipation = false;
 
-        for (let j = 2; j < 14; j += 2) {
-            if (cells[j] && cells[j].textContent.trim() === '✓') {
+        for (let j = 0; j < checkboxes.length; j += 2) {
+            const presenceCheckbox = checkboxes[j];
+            if (presenceCheckbox && presenceCheckbox.checked) {
                 hasPresence = true;
                 break;
             }
         }
 
-        for (let j = 3; j < 14; j += 2) {
-            if (cells[j] && cells[j].textContent.trim() === '✓') {
+        for (let j = 1; j < checkboxes.length; j += 2) {
+            const participationCheckbox = checkboxes[j];
+            if (participationCheckbox && participationCheckbox.checked) {
                 hasParticipation = true;
                 break;
             }
@@ -366,12 +303,15 @@ function generateDetailedReport() {
 
     createBarChart(totalStudents, studentsPresent, studentsParticipated);
 
-    document.getElementById('detailedReportSection').classList.add('show');
+    showSection('reports');
 
-    document.getElementById('detailedReportSection').scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-    });
+    setTimeout(() => {
+        document.getElementById('detailedReportSection').classList.add('show');
+        document.getElementById('detailedReportSection').scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }, 100);
 }
 
 function createBarChart(total, present, participated) {
@@ -415,10 +355,182 @@ function createBarChart(total, present, participated) {
 }
 
 function setupReportButton() {
-    const showReportBtn = document.getElementById('showReportBtn');
-    if (showReportBtn) {
-        showReportBtn.addEventListener('click', generateDetailedReport);
+    setTimeout(() => {
+        const showReportBtn = document.getElementById('showReportBtn');
+        if (showReportBtn) {
+            showReportBtn.removeEventListener('click', generateDetailedReport);
+            showReportBtn.addEventListener('click', generateDetailedReport);
+            console.log('Report button setup complete');
+        } else {
+            console.log('Report button not found');
+        }
+    }, 100);
+}
+
+function updateAttendance(checkbox) {
+    const row = checkbox.closest('tr');
+    const checkboxes = row.querySelectorAll('.attendance-checkbox');
+    
+    let absences = 0;
+    let participations = 0;
+    
+    for (let i = 0; i < checkboxes.length; i += 2) {
+        const presenceCheckbox = checkboxes[i];
+        const participationCheckbox = checkboxes[i + 1];
+        
+        if (!presenceCheckbox.checked) {
+            absences++;
+        }
+        
+        if (participationCheckbox.checked) {
+            participations++;
+        }
     }
+    
+    const absencesCell = row.querySelector('.absences-cell strong');
+    const participationCell = row.querySelector('.participation-cell strong');
+    const messageCell = row.querySelector('.message-cell');
+    
+    absencesCell.textContent = absences;
+    participationCell.textContent = participations;
+    
+    const statusClass = getStatusClass(absences);
+    row.className = statusClass;
+    
+    const message = getMessage(absences, participations);
+    messageCell.textContent = message;
+    
+    updateDashboardStats();
+}
+
+function setupJQueryFeatures() {
+    $(document).ready(function() {
+        $('#showReportBtn').off('click').on('click', function() {
+            console.log('Show Report button clicked');
+            generateDetailedReport();
+        });
+
+        $('#searchName').on('keyup', function() {
+            const searchTerm = $(this).val().toLowerCase();
+            
+            $('#attendance-tbody tr').filter(function() {
+                const lastName = $(this).find('td').eq(0).text().toLowerCase();
+                const firstName = $(this).find('td').eq(1).text().toLowerCase();
+                const fullName = lastName + ' ' + firstName;
+                const match = fullName.indexOf(searchTerm) > -1;
+                
+                $(this).toggle(match);
+                return !match;
+            });
+
+            const visibleRows = $('#attendance-tbody tr:visible').length;
+            if (searchTerm === '') {
+                $('#sortStatus').text('Ready to search or sort');
+            } else {
+                $('#sortStatus').text(`Found ${visibleRows} student(s) matching "${$(this).val()}"`);
+            }
+        });
+
+        $('#sortAbsencesAsc').on('click', function() {
+            sortTable('absences', 'asc');
+            $('#sortStatus').text('Currently sorted by Absences (Ascending)');
+        });
+
+        $('#sortParticipationDesc').on('click', function() {
+            sortTable('participation', 'desc');
+            $('#sortStatus').text('Currently sorted by Participation (Descending)');
+        });
+
+        $('#attendance-tbody').on('mouseenter', 'tr', function() {
+            $(this).addClass('row-hover');
+        });
+
+        $('#attendance-tbody').on('mouseleave', 'tr', function() {
+            $(this).removeClass('row-hover');
+        });
+
+        $('#attendance-tbody').on('click', 'tr', function(e) {
+            if ($(e.target).is('input[type="checkbox"]')) {
+                return;
+            }
+
+            const lastName = $(this).find('td').eq(0).text();
+            const firstName = $(this).find('td').eq(1).text();
+            const absences = $(this).find('.absences-cell strong').text();
+            
+            showStudentModal(lastName, firstName, absences);
+        });
+
+        $('#highlightExcellentBtn').on('click', function() {
+            $('#attendance-tbody tr').each(function() {
+                const absences = parseInt($(this).find('.absences-cell strong').text());
+                
+                if (absences < 3) {
+                    $(this).addClass('excellent-highlight');
+                    $(this).fadeOut(300).fadeIn(300).fadeOut(300).fadeIn(300);
+                }
+            });
+        });
+
+        $('#resetColorsBtn').on('click', function() {
+            $('#attendance-tbody tr').removeClass('excellent-highlight');
+            $('#attendance-tbody tr').stop(true, true).show();
+        });
+    });
+}
+
+function sortTable(criterion, order) {
+    const tbody = $('#attendance-tbody');
+    const rows = tbody.find('tr').get();
+
+    rows.sort(function(a, b) {
+        let valA, valB;
+
+        if (criterion === 'absences') {
+            valA = parseInt($(a).find('.absences-cell strong').text());
+            valB = parseInt($(b).find('.absences-cell strong').text());
+        } else if (criterion === 'participation') {
+            valA = parseInt($(a).find('.participation-cell strong').text());
+            valB = parseInt($(b).find('.participation-cell strong').text());
+        }
+
+        if (order === 'asc') {
+            return valA - valB;
+        } else {
+            return valB - valA;
+        }
+    });
+
+    $.each(rows, function(index, row) {
+        tbody.append(row);
+    });
+}
+
+function showStudentModal(lastName, firstName, absences) {
+    const overlay = $('<div class="modal-overlay"></div>');
+    const modal = $(`
+        <div class="student-info-modal">
+            <div class="modal-header">Student Information</div>
+            <div class="modal-content">
+                <p><strong>Full Name:</strong> ${firstName} ${lastName}</p>
+                <p><strong>Number of Absences:</strong> ${absences}</p>
+            </div>
+            <button class="modal-close-btn">Close</button>
+        </div>
+    `);
+    
+    $('body').append(overlay);
+    $('body').append(modal);
+    
+    overlay.on('click', function() {
+        overlay.fadeOut(300, function() { $(this).remove(); });
+        modal.fadeOut(300, function() { $(this).remove(); });
+    });
+    
+    modal.find('.modal-close-btn').on('click', function() {
+        overlay.fadeOut(300, function() { $(this).remove(); });
+        modal.fadeOut(300, function() { $(this).remove(); });
+    });
 }
 
 function generateReport(reportType) {
@@ -430,6 +542,7 @@ function generateReport(reportType) {
     
     showMessage(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} report generated successfully!`, 'success');
 }
+
 function getReportData(reportType) {
     const rows = document.querySelectorAll('#attendance-tbody tr');
     const data = {
@@ -437,25 +550,34 @@ function getReportData(reportType) {
         presentStudents: 0,
         absentStudents: 0,
         participatedStudents: 0,
-        courses: new Set(),
         reportDate: new Date().toLocaleDateString()
     };
     
     rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        const course = cells[3].textContent;
-        const isPresent = row.querySelector('.status.present');
-        const participated = row.querySelector('.status.participated');
+        const checkboxes = row.querySelectorAll('.attendance-checkbox');
         
-        data.courses.add(course);
+        let hasPresence = false;
+        let hasParticipation = false;
+
+        for (let j = 0; j < checkboxes.length; j += 2) {
+            if (checkboxes[j] && checkboxes[j].checked) {
+                hasPresence = true;
+            }
+        }
+
+        for (let j = 1; j < checkboxes.length; j += 2) {
+            if (checkboxes[j] && checkboxes[j].checked) {
+                hasParticipation = true;
+            }
+        }
         
-        if (isPresent) {
+        if (hasPresence) {
             data.presentStudents++;
         } else {
             data.absentStudents++;
         }
         
-        if (participated) {
+        if (hasParticipation) {
             data.participatedStudents++;
         }
     });
@@ -480,7 +602,6 @@ function createReportContent(reportType, data) {
             <li><strong>Absent Students:</strong> ${data.absentStudents}</li>
             <li><strong>Attendance Rate:</strong> ${data.attendanceRate}%</li>
             <li><strong>Participation Rate:</strong> ${data.participationRate}%</li>
-            <li><strong>Courses Covered:</strong> ${Array.from(data.courses).join(', ')}</li>
         </ul>
     `;
 }
