@@ -1,0 +1,94 @@
+# Algiers University Attendance System
+# .gitignore file
+
+# ==========================================
+# Sensitive Files
+# ==========================================
+# Exclude config files with sensitive data in production
+# includes/config.php
+
+# ==========================================
+# Log Files
+# ==========================================
+logs/*.log
+logs/*.txt
+logs/database.log
+logs/auth.log
+logs/system.log
+logs/error.log
+
+# Keep log directory but ignore log files
+logs/*
+!logs/README.md
+
+# ==========================================
+# Upload Directories
+# ==========================================
+uploads/*
+!uploads/.htaccess
+!uploads/README.md
+
+# ==========================================
+# Temporary Files
+# ==========================================
+*.tmp
+*.temp
+*~
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# IDE/Editor Files
+# ==========================================
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+.phpintel/
+
+# ==========================================
+# Dependency Directories
+# ==========================================
+node_modules/
+vendor/
+
+# ==========================================
+# Cache Files
+# ==========================================
+*.cache
+.sass-cache/
+
+# ==========================================
+# Database Files
+# ==========================================
+*.sql.backup
+*.db
+*.sqlite
+*.sqlite3
+
+# ==========================================
+# System Files
+# ==========================================
+.htaccess.backup
+.htpasswd
+
+# ==========================================
+# Documentation Build
+# ==========================================
+docs/_build/
+docs/dist/
+
+# ==========================================
+# Environment Files
+# ==========================================
+.env
+.env.local
+.env.production
+
+# ==========================================
+# Legacy/Archive
+# ==========================================
+archive/
+backup/
+old/

@@ -1,0 +1,15 @@
+# Simple .htaccess for WAMP - Emergency Fix
+# This replaces the complex version that was causing Internal Server Error
+
+# Basic PHP settings (only if mod_php is available)
+<IfModule mod_php.c>
+    php_flag expose_php off
+</IfModule>
+
+# Basic protection for sensitive files
+<FilesMatch "\.(log|sql)$">
+    Require all denied
+</FilesMatch>
+
+# Simple error pages
+ErrorDocument 404 index.html
