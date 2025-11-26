@@ -1,0 +1,16 @@
+teacher_id,username,full_name,email,department,position,specialization
+T001,prof.smith,Dr. John Smith,john.smith@university.edu,Computer Science,Full Professor,Machine Learning and AI
+T002,prof.jones,Dr. Sarah Jones,sarah.jones@university.edu,Computer Science,Associate Professor,Database Systems and Data Mining
+T003,prof.davis,Dr. Michael Davis,mike.davis@university.edu,Information Systems,Assistant Professor,Web Development and Security
+T004,prof.wang,Dr. Lisa Wang,lisa.wang@university.edu,Software Engineering,Full Professor,Software Architecture and Design Patterns
+T005,prof.hassan,Dr. Ahmed Hassan,ahmed.hassan@university.edu,Mathematics,Associate Professor,Applied Mathematics and Statistics
+T006,prof.garcia,Prof. Maria Garcia,maria.garcia@university.edu,Computer Science,Lecturer,Programming Languages and Compilers
+T007,prof.brown,Dr. Robert Brown,robert.brown@university.edu,Electronics,Assistant Professor,Digital Signal Processing
+T008,prof.ali,Dr. Fatima Ali,fatima.ali@university.edu,Information Systems,Associate Professor,Information Security and Cryptography
+T009,prof.wilson,Prof. James Wilson,james.wilson@university.edu,Software Engineering,Teaching Assistant,Mobile Application Development
+T010,prof.petrov,Dr. Elena Petrov,elena.petrov@university.edu,Physics,Full Professor,Computational Physics and Modeling
+T011,prof.salem,Dr. Omar Ben Salem,omar.salem@university.edu,Computer Science,Research Fellow,Computer Vision and Image Processing
+T012,prof.martin,Dr. Sophie Martin,sophie.martin@university.edu,Mathematics,Assistant Professor,Discrete Mathematics and Graph Theory
+T013,prof.mansour,Prof. Karim Mansour,karim.mansour@university.edu,Electronics,Lecturer,Embedded Systems and IoT
+T014,prof.kowalski,Dr. Anna Kowalski,anna.kowalski@university.edu,Information Systems,Associate Professor,Business Intelligence and Analytics
+T015,prof.benali,Dr. Youssef Ben Ali,youssef.ali@university.edu,Software Engineering,Assistant Professor,Agile Development and DevOps

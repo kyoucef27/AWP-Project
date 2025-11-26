@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'professor', 'student') NOT NULL DEFAULT 'student',
+    role ENUM('admin', 'professor', 'student', 'teacher') NOT NULL DEFAULT 'student',
     email VARCHAR(100),
     full_name VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -50,6 +50,40 @@ CREATE TABLE IF NOT EXISTS professors (
     department VARCHAR(100),
     office_location VARCHAR(50),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS teachers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    teacher_id VARCHAR(20) UNIQUE,
+    department VARCHAR(100),
+    position VARCHAR(100),
+    specialization VARCHAR(200),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS modules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    module_code VARCHAR(20) UNIQUE NOT NULL,
+    module_name VARCHAR(200) NOT NULL,
+    description TEXT,
+    credits INT DEFAULT 3,
+    department VARCHAR(100),
+    year_level INT,
+    semester ENUM('Fall', 'Spring', 'Summer', 'Both') DEFAULT 'Both',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS teacher_modules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT,
+    module_id INT,
+    role ENUM('Lecturer', 'Assistant', 'Coordinator') DEFAULT 'Lecturer',
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+    FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_teacher_module (teacher_id, module_id)
 );
 
 CREATE TABLE IF NOT EXISTS login_attempts (

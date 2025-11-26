@@ -1,6 +1,5 @@
 <?php
 // MySQL Configuration for WAMP
-define('DB_TYPE', 'mysql');
 define('DB_HOST', 'localhost');
 define('DB_PORT', '3308');
 define('DB_NAME', 'paw_attendance_system');

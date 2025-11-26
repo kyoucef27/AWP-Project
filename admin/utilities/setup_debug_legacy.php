@@ -12,13 +12,7 @@ try {
     require_once 'includes/config.php';
     echo "✅ Config file loaded successfully<br>";
     
-    // Check database type
-    if (defined('DB_TYPE') && DB_TYPE === 'sqlite') {
-        echo "📊 Database Type: SQLite<br>";
-        echo "📁 Database File: " . DB_FILE . "<br>";
-    } else {
-        echo "📊 Database: " . DB_NAME . " on " . DB_HOST . "<br>";
-    }
+    echo "📊 Database: " . DB_NAME . " on " . DB_HOST . "<br>";
     echo "🌍 Timezone: " . date_default_timezone_get() . "<br>";
 } catch (Exception $e) {
     echo "❌ Error loading config: " . $e->getMessage() . "<br>";
@@ -28,56 +22,31 @@ try {
 // Step 2: Test database connection
 echo "<h3>Step 2: Testing Database Connection</h3>";
 try {
-    if (defined('DB_TYPE') && DB_TYPE === 'sqlite') {
-        // SQLite connection
-        $pdo = getDBConnection();
-        echo "✅ SQLite connection successful<br>";
-        
-        // Get SQLite version
-        $version = $pdo->query('SELECT sqlite_version()')->fetchColumn();
-        echo "📊 SQLite Version: " . $version . "<br>";
-        
-        // Check if database file exists
-        if (file_exists(DB_FILE)) {
-            echo "✅ Database file exists<br>";
-            echo "📊 File size: " . number_format(filesize(DB_FILE)) . " bytes<br>";
-        } else {
-            echo "⚠️ Database file will be created<br>";
-        }
-        
-    } else {
-        // MySQL connection
-        $pdo = new PDO(
-            "mysql:host=" . DB_HOST . ";charset=" . DB_CHARSET,
-            DB_USER,
-            DB_PASS,
-            [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-            ]
-        );
-        echo "✅ MySQL connection successful<br>";
-        
-        // Get MySQL version
-        $stmt = $pdo->query('SELECT VERSION()');
-        $version = $stmt->fetchColumn();
-        echo "📊 MySQL Version: " . $version . "<br>";
-    }
+    // MySQL connection
+    $pdo = new PDO(
+        "mysql:host=" . DB_HOST . ";charset=" . DB_CHARSET,
+        DB_USER,
+        DB_PASS,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]
+    );
+    echo "✅ MySQL connection successful<br>";
+    
+    // Get MySQL version
+    $stmt = $pdo->query('SELECT VERSION()');
+    $version = $stmt->fetchColumn();
+    echo "📊 MySQL Version: " . $version . "<br>";
     
 } catch (PDOException $e) {
     echo "❌ Database connection failed: " . $e->getMessage() . "<br>";
     echo "<p><strong>Common fixes:</strong></p>";
     echo "<ul>";
-    if (defined('DB_TYPE') && DB_TYPE === 'sqlite') {
-        echo "<li>Check if database directory is writable</li>";
-        echo "<li>Verify SQLite extension is loaded</li>";
-        echo "<li>Check file path permissions</li>";
-    } else {
-        echo "<li>Make sure WAMP/XAMPP MySQL service is running</li>";
-        echo "<li>Check if port 3306 is available</li>";
-        echo "<li>Verify MySQL username/password in config.php</li>";
-    }
+    echo "<li>Make sure WAMP/XAMPP MySQL service is running</li>";
+    echo "<li>Check if port 3306 is available</li>";
+    echo "<li>Verify MySQL username/password in config.php</li>";
     echo "</ul>";
     exit;
 }
@@ -85,62 +54,55 @@ try {
 // Step 3: Create/Verify Database
 echo "<h3>Step 3: Database Setup</h3>";
 try {
-    if (defined('DB_TYPE') && DB_TYPE === 'sqlite') {
-        // For SQLite, database is already ready from connection
-        echo "✅ SQLite database ready<br>";
-        echo "📁 Location: " . DB_FILE . "<br>";
-        
-        // Create tables if they don't exist
-        echo "🔧 Creating SQLite tables...<br>";
-        
-        // Users table
-        $pdo->exec("
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username VARCHAR(50) UNIQUE NOT NULL,
-                password VARCHAR(255) NOT NULL,
-                role VARCHAR(20) NOT NULL DEFAULT 'student',
-                email VARCHAR(100),
-                full_name VARCHAR(100),
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        ");
-        
-        // Students table
-        $pdo->exec("
-            CREATE TABLE IF NOT EXISTS students (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                student_number VARCHAR(20) UNIQUE,
-                specialization VARCHAR(100),
-                year_of_study INTEGER,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            )
-        ");
-        
-        // Professors table
-        $pdo->exec("
-            CREATE TABLE IF NOT EXISTS professors (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                department VARCHAR(100),
-                office_location VARCHAR(50),
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            )
-        ");
-        
-        echo "✅ SQLite tables created/verified<br>";
-        
-    } else {
-        // MySQL database creation
-        $collation = defined('DB_COLLATION') ? DB_COLLATION : 'utf8mb4_unicode_ci';
-        $pdo->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME . " COLLATE " . $collation);
-        echo "✅ Database '" . DB_NAME . "' created/exists<br>";
-        
-        $pdo->exec("USE " . DB_NAME);
-        echo "✅ Database selected<br>";
-    }
+    // MySQL database creation
+    $collation = defined('DB_COLLATION') ? DB_COLLATION : 'utf8mb4_unicode_ci';
+    $pdo->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME . " COLLATE " . $collation);
+    echo "✅ Database '" . DB_NAME . "' created/exists<br>";
+    
+    $pdo->exec("USE " . DB_NAME);
+    echo "✅ Database selected<br>";
+    
+    // Create MySQL tables
+    echo "🔧 Creating MySQL tables...<br>";
+    
+    // Users table
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(50) UNIQUE NOT NULL,
+            password VARCHAR(255) NOT NULL,
+            role VARCHAR(20) NOT NULL DEFAULT 'student',
+            email VARCHAR(100),
+            full_name VARCHAR(100),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+    ");
+    
+    // Students table
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS students (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT,
+            student_number VARCHAR(20) UNIQUE,
+            specialization VARCHAR(100),
+            year_of_study INT,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ");
+    
+    // Professors table
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS professors (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT,
+            department VARCHAR(100),
+            office_location VARCHAR(50),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ");
+    
+    echo "✅ MySQL tables created/verified<br>";
 } catch (PDOException $e) {
     echo "❌ Error setting up database: " . $e->getMessage() . "<br>";
     exit;
@@ -171,15 +133,9 @@ try {
 // Step 5: Verify tables
 echo "<h3>Step 5: Verifying Tables</h3>";
 try {
-    if (defined('DB_TYPE') && DB_TYPE === 'sqlite') {
-        // SQLite table listing
-        $stmt = $pdo->query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
-        $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    } else {
-        // MySQL table listing
-        $stmt = $pdo->query("SHOW TABLES");
-        $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    }
+    // MySQL table listing
+    $stmt = $pdo->query("SHOW TABLES");
+    $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
     echo "✅ Found " . count($tables) . " tables:<br>";
     echo "<div style='columns: 3; margin: 10px 0;'>";

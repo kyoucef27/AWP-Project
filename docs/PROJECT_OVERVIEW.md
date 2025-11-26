@@ -37,10 +37,10 @@ pawproject/
 │   ├── attendance.php         # View attendance per course
 │   └── justification.php      # Submit justifications
 ├── admin/
-│   ├── index.php              # Admin home page
-│   ├── statistics.php         # Statistics and charts
+│   ├── dashboard.php          # Admin home page
+│   ├── statistics.php         # Statistics and charts page  
 │   ├── student_management.php # Student list management
-│   └── import_export.php      # Progres Excel import/export
+│   └── sample_students.csv    # CSV template for import
 ├── api/
 │   ├── auth_api.php           # Authentication endpoints
 │   ├── attendance_api.php     # Attendance operations
@@ -86,9 +86,13 @@ pawproject/
 2. **Attendance Page**: View attendance status, submit justifications
 
 ### Administrator Features
-1. **Home Page**: System overview
-2. **Statistics Page**: Charts and analytics
-3. **Student Management**: Import/export (Progres Excel), add/remove students
+1. **Dashboard**: System overview with user statistics and quick actions
+2. **Statistics Page**: Interactive charts showing user growth, activity trends, and system metrics
+3. **Student Management**: Complete student lifecycle management
+   - Add/remove students individually
+   - Bulk import from CSV (Progres Excel format)
+   - Export student lists to CSV/Excel
+   - Search and filter functionality
 
 ## 🚀 Implementation Progress
 

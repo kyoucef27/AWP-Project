@@ -25,13 +25,24 @@ try {
     }
     
     // Tables count
-    $stmt = $pdo->query("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
+    $stmt = $pdo->query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = '" . DB_NAME . "'");
     $stats['tables'] = $stmt->fetch()['count'];
+    
+    // Module statistics
+    $stmt = $pdo->query("SELECT COUNT(*) as count FROM modules");
+    $stats['total_modules'] = $stmt->fetch()['count'];
+    
+    $stmt = $pdo->query("SELECT COUNT(*) as count FROM modules WHERE is_active = 1");
+    $stats['active_modules'] = $stmt->fetch()['count'];
+    
+    // Teacher assignments
+    $stmt = $pdo->query("SELECT COUNT(*) as count FROM teacher_modules");
+    $stats['teacher_assignments'] = $stmt->fetch()['count'];
     
 } catch (PDOException $e) {
     error_log("Admin dashboard error: " . $e->getMessage());
     $user_counts = [];
-    $stats = ['tables' => 0];
+    $stats = ['tables' => 0, 'total_modules' => 0, 'active_modules' => 0, 'teacher_assignments' => 0];
 }
 ?>
 <!DOCTYPE html>
@@ -74,6 +85,24 @@ try {
         .logo {
             font-size: 1.5rem;
             font-weight: 600;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: background 0.3s;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
         }
         
         .user-info {
@@ -320,6 +349,13 @@ try {
             <div class="logo">
                 🎓 AUAS Admin
             </div>
+            <div class="nav-links">
+                <a href="dashboard.php" class="nav-link">🏠 Home</a>
+                <a href="statistics.php" class="nav-link">📊 Statistics</a>
+                <a href="student_management.php" class="nav-link">👥 Students</a>
+                <a href="teacher_management.php" class="nav-link">👨‍🏫 Teachers</a>
+                <a href="module_management.php" class="nav-link">📚 Modules</a>
+            </div>
             <div class="user-info">
                 <span>Welcome, <?php echo htmlspecialchars($user['username']); ?></span>
                 <div class="dropdown">
@@ -365,21 +401,21 @@ try {
             </div>
             
             <div class="stat-card courses">
-                <div class="stat-icon">📚</div>
-                <div class="stat-number"><?php echo $stats['tables'] ?? 0; ?></div>
-                <div class="stat-label">Database Tables</div>
+                <div class="stat-icon">👨‍🏫</div>
+                <div class="stat-number"><?php echo $user_counts['teacher'] ?? 0; ?></div>
+                <div class="stat-label">Teachers</div>
             </div>
             
             <div class="stat-card groups">
-                <div class="stat-icon">💾</div>
-                <div class="stat-number">SQLite</div>
-                <div class="stat-label">Database Type</div>
+                <div class="stat-icon">📚</div>
+                <div class="stat-number"><?php echo $stats['total_modules'] ?? 0; ?></div>
+                <div class="stat-label">Total Modules</div>
             </div>
             
             <div class="stat-card sessions">
-                <div class="stat-icon">✅</div>
-                <div class="stat-number">Active</div>
-                <div class="stat-label">System Status</div>
+                <div class="stat-icon">🔗</div>
+                <div class="stat-number"><?php echo $stats['teacher_assignments'] ?? 0; ?></div>
+                <div class="stat-label">Teacher Assignments</div>
             </div>
         </div>
 
@@ -387,9 +423,21 @@ try {
             <div class="main-content">
                 <h2 class="section-title">⚡ Quick Actions</h2>
                 <div class="quick-actions">
-                    <a href="../debug_users.php" class="action-btn">
-                        <div class="action-icon">👤</div>
-                        <div>View Users</div>
+                    <a href="student_management.php" class="action-btn">
+                        <div class="action-icon">👥</div>
+                        <div>Manage Students</div>
+                    </a>
+                    <a href="teacher_management.php" class="action-btn">
+                        <div class="action-icon">👨‍🏫</div>
+                        <div>Manage Teachers</div>
+                    </a>
+                    <a href="module_management.php" class="action-btn">
+                        <div class="action-icon">📚</div>
+                        <div>Manage Modules</div>
+                    </a>
+                    <a href="statistics.php" class="action-btn">
+                        <div class="action-icon">📊</div>
+                        <div>View Statistics</div>
                     </a>
                     <a href="../setup_database.php" class="action-btn">
                         <div class="action-icon">🔧</div>
@@ -399,17 +447,13 @@ try {
                         <div class="action-icon">📊</div>
                         <div>System Status</div>
                     </a>
-                    <a href="../test_connection.php" class="action-btn">
+                    <a href="utilities/test_connection.php" class="action-btn">
                         <div class="action-icon">🔌</div>
                         <div>Test Connection</div>
                     </a>
-                    <a href="../login_test.php" class="action-btn">
-                        <div class="action-icon">🧪</div>
-                        <div>Login Test</div>
-                    </a>
-                    <a href="../setup_debug.php" class="action-btn">
-                        <div class="action-icon">🐛</div>
-                        <div>Debug Tools</div>
+                    <a href="utilities/system_diagnostics.php" class="action-btn">
+                        <div class="action-icon">🔧</div>
+                        <div>System Diagnostics</div>
                     </a>
                 </div>
             </div>
@@ -421,14 +465,14 @@ try {
                         <div class="activity-icon">🗄️</div>
                         <div class="activity-content">
                             <div class="activity-description">Database Type</div>
-                            <div class="activity-meta">SQLite - File-based database</div>
+                            <div class="activity-meta">MySQL - Server-based database</div>
                         </div>
                     </li>
                     <li class="activity-item">
                         <div class="activity-icon">🌐</div>
                         <div class="activity-content">
                             <div class="activity-description">Web Server</div>
-                            <div class="activity-meta">PHP Built-in Server (Port 8000)</div>
+                            <div class="activity-meta">WAMP Server (Apache + MySQL)</div>
                         </div>
                     </li>
                     <li class="activity-item">

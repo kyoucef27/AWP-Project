@@ -1,0 +1,8 @@
+# Prevent direct access to uploaded files
+Order Deny,Allow
+Deny from all
+
+# Allow only specific file types if needed
+<FilesMatch "\.(csv|xlsx|xls)$">
+    Allow from all
+</FilesMatch>
