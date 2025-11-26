@@ -1,0 +1,11 @@
+module_code,module_name,description,credits,department,year_level,semester
+CS101,Introduction to Programming,Basic programming concepts using Python,3,Computer Science,1,1
+CS102,Data Structures,Study of fundamental data structures and algorithms,4,Computer Science,1,2
+CS201,Object-Oriented Programming,Advanced programming using Java,3,Computer Science,2,1
+CS202,Database Systems,Introduction to relational database design and SQL,4,Computer Science,2,2
+CS301,Web Development,HTML CSS JavaScript and modern frameworks,3,Computer Science,3,1
+CS302,Software Engineering,Software development methodologies and project management,4,Computer Science,3,2
+MATH101,Calculus I,Differential calculus and applications,4,Mathematics,1,1
+MATH102,Calculus II,Integral calculus and series,4,Mathematics,1,2
+MATH201,Linear Algebra,Vectors matrices and linear transformations,3,Mathematics,2,1
+ENG101,English Composition,Academic writing and communication skills,3,English,1,1

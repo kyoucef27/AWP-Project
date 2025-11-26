@@ -1,75 +1,122 @@
 <?php
 session_start();
+require_once '../includes/config.php';
 
-// Check if user is logged in and is teacher
+// Check if user is logged in and is a teacher
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     header("Location: ../auth/login.php");
     exit();
 }
 
-$user = $_SESSION;
+$pdo = getDBConnection();
+$user_id = $_SESSION['user_id'];
 
-// Get teacher data and assigned modules
+// Get teacher record
 try {
-    require_once '../includes/config.php';
-    $pdo = getDBConnection();
+    $stmt = $pdo->prepare("SELECT t.id, u.full_name FROM teachers t JOIN users u ON t.user_id = u.id WHERE t.user_id = ?");
+    $stmt->execute([$user_id]);
+    $teacher_record = $stmt->fetch();
     
-    // Get teacher profile information
-    $stmt = $pdo->prepare("
-        SELECT t.*, u.full_name, u.email 
-        FROM teachers t 
-        JOIN users u ON t.user_id = u.id 
-        WHERE u.id = ?
-    ");
-    $stmt->execute([$_SESSION['user_id']]);
-    $teacher_profile = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    // Get assigned modules
-    $stmt = $pdo->prepare("
-        SELECT m.*, tm.role as teaching_role, tm.assigned_at
-        FROM modules m
-        JOIN teacher_modules tm ON m.id = tm.module_id
-        WHERE tm.teacher_id = ? AND m.is_active = 1
-        ORDER BY m.module_code
-    ");
-    $stmt->execute([$teacher_profile['id'] ?? 0]);
-    $assigned_modules = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Get statistics
-    $stats = [];
-    $stats['total_modules'] = count($assigned_modules);
-    
-    // Count by semester
-    $stats['fall_modules'] = 0;
-    $stats['spring_modules'] = 0;
-    $stats['summer_modules'] = 0;
-    $stats['both_modules'] = 0;
-    
-    foreach ($assigned_modules as $module) {
-        switch ($module['semester']) {
-            case 'Fall':
-                $stats['fall_modules']++;
-                break;
-            case 'Spring':
-                $stats['spring_modules']++;
-                break;
-            case 'Summer':
-                $stats['summer_modules']++;
-                break;
-            case 'Both':
-                $stats['both_modules']++;
-                break;
-        }
+    if (!$teacher_record) {
+        die("Teacher profile not found. Please contact an administrator.");
     }
     
-    // Calculate total credits
-    $stats['total_credits'] = array_sum(array_column($assigned_modules, 'credits'));
-    
+    $teacher_id = $teacher_record['id'];
+    $teacher_name = $teacher_record['full_name'];
 } catch (PDOException $e) {
-    error_log("Teacher dashboard error: " . $e->getMessage());
-    $teacher_profile = [];
-    $assigned_modules = [];
-    $stats = ['total_modules' => 0, 'total_credits' => 0, 'fall_modules' => 0, 'spring_modules' => 0, 'summer_modules' => 0, 'both_modules' => 0];
+    error_log("Error fetching teacher: " . $e->getMessage());
+    die("Error loading teacher profile");
+}
+
+// Check if teaching_sessions table exists, create if not
+try {
+    $stmt = $pdo->query("SHOW TABLES LIKE 'teaching_sessions'");
+    if ($stmt->rowCount() == 0) {
+        // Create teaching_sessions table
+        $sql = "
+        CREATE TABLE teaching_sessions (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            teacher_id INT NOT NULL,
+            module_id INT NOT NULL,
+            session_date DATE NOT NULL,
+            start_time TIME NOT NULL,
+            end_time TIME NOT NULL,
+            session_type ENUM('Lecture', 'Lab', 'Tutorial', 'Exam', 'Workshop') DEFAULT 'Lecture',
+            location VARCHAR(100) NULL,
+            description TEXT NULL,
+            attendance_taken BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+            FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE,
+            INDEX idx_teacher_date (teacher_id, session_date),
+            INDEX idx_module_date (module_id, session_date)
+        )";
+        $pdo->exec($sql);
+    }
+    
+    // Update attendance table to include session_id if it doesn't exist
+    $stmt = $pdo->query("DESCRIBE attendance");
+    $columns = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'Field');
+    if (!in_array('session_id', $columns)) {
+        $pdo->exec("ALTER TABLE attendance ADD COLUMN session_id INT NULL AFTER enrollment_id");
+        $pdo->exec("ALTER TABLE attendance ADD FOREIGN KEY (session_id) REFERENCES teaching_sessions(id) ON DELETE SET NULL");
+    }
+} catch (PDOException $e) {
+    error_log("Error setting up teaching tables: " . $e->getMessage());
+}
+
+// Get teacher's assigned modules with session counts
+try {
+    $stmt = $pdo->prepare("
+        SELECT 
+            m.id,
+            m.module_code,
+            m.module_name,
+            m.credits,
+            tm.role as teaching_role,
+            COUNT(DISTINCT e.student_id) as enrolled_students,
+            COUNT(DISTINCT ts.id) as total_sessions,
+            SUM(CASE WHEN ts.session_date = CURDATE() THEN 1 ELSE 0 END) as today_sessions,
+            SUM(CASE WHEN ts.attendance_taken = 1 THEN 1 ELSE 0 END) as completed_sessions
+        FROM teacher_modules tm
+        JOIN modules m ON tm.module_id = m.id
+        LEFT JOIN enrollments e ON m.id = e.module_id AND e.status = 'active'
+        LEFT JOIN teaching_sessions ts ON m.id = ts.module_id AND ts.teacher_id = ?
+        WHERE tm.teacher_id = ? AND m.is_active = 1
+        GROUP BY m.id, m.module_code, m.module_name, m.credits, tm.role
+        ORDER BY m.module_code
+    ");
+    $stmt->execute([$teacher_id, $teacher_id]);
+    $modules = $stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log("Error fetching modules: " . $e->getMessage());
+    $modules = [];
+}
+
+// Get recent sessions (last 7 days)
+try {
+    $stmt = $pdo->prepare("
+        SELECT 
+            ts.*,
+            m.module_code,
+            m.module_name,
+            COUNT(DISTINCT e.student_id) as enrolled_count,
+            COUNT(DISTINCT a.id) as attendance_count
+        FROM teaching_sessions ts
+        JOIN modules m ON ts.module_id = m.id
+        LEFT JOIN enrollments e ON m.id = e.module_id AND e.status = 'active'
+        LEFT JOIN attendance a ON ts.id = a.session_id
+        WHERE ts.teacher_id = ? AND ts.session_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        GROUP BY ts.id
+        ORDER BY ts.session_date DESC, ts.start_time DESC
+        LIMIT 10
+    ");
+    $stmt->execute([$teacher_id]);
+    $recent_sessions = $stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log("Error fetching recent sessions: " . $e->getMessage());
+    $recent_sessions = [];
 }
 ?>
 <!DOCTYPE html>
@@ -78,7 +125,9 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Dashboard - PAW Project</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Teacher Dashboard Styles */
         * {
             margin: 0;
             padding: 0;
@@ -87,106 +136,81 @@ try {
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-            color: #333;
+            background: #f8f9fa;
+            color: #2c3e50;
+            line-height: 1.6;
         }
         
-        .navbar {
-            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+        .teacher-navbar {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3a8a 100%);
             color: white;
-            padding: 1rem 2rem;
+            padding: 1rem 0;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
         }
         
-        .navbar-content {
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
         }
         
-        .logo {
+        .navbar-brand a {
+            color: white;
+            text-decoration: none;
             font-size: 1.5rem;
-            font-weight: 600;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
-        .nav-links {
+        .navbar-menu {
             display: flex;
             gap: 2rem;
-            align-items: center;
         }
         
         .nav-link {
             color: white;
             text-decoration: none;
             padding: 0.5rem 1rem;
-            border-radius: 25px;
-            transition: background 0.3s;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.3s ease;
         }
         
-        .nav-link:hover {
+        .nav-link:hover, .nav-link.active {
             background: rgba(255,255,255,0.2);
         }
         
-        .user-info {
+        .user-menu {
             display: flex;
             align-items: center;
             gap: 1rem;
         }
         
-        .dropdown {
-            position: relative;
-        }
-        
-        .dropdown-btn {
-            background: rgba(255,255,255,0.2);
+        .logout-btn {
             color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 25px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 100%;
-            background: white;
-            min-width: 200px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            border-radius: 8px;
-            overflow: hidden;
-            z-index: 1000;
-        }
-        
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-        
-        .dropdown-item {
-            display: block;
-            padding: 12px 16px;
-            color: #333;
             text-decoration: none;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 0.5rem 1rem;
+            border: 1px solid white;
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
         
-        .dropdown-item:hover {
-            background: #f8f9fa;
+        .logout-btn:hover {
+            background: white;
+            color: #2c5aa0;
         }
         
-        .container {
+        .main-container {
             max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 2rem;
+            margin: 0 auto;
+            padding: 2rem 1rem;
         }
         
         .page-header {
@@ -194,356 +218,468 @@ try {
         }
         
         .page-header h1 {
-            font-size: 2.5rem;
-            color: #333;
+            color: #2c3e50;
             margin-bottom: 0.5rem;
-            font-weight: 300;
-        }
-        
-        .breadcrumb {
-            color: #666;
-            font-size: 1rem;
-        }
-        
-        .profile-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            padding: 2rem;
-            margin-bottom: 2rem;
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 2rem;
-            align-items: center;
-        }
-        
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: white;
-        }
-        
-        .profile-info h2 {
-            margin-bottom: 0.5rem;
-            color: #333;
-        }
-        
-        .profile-detail {
-            color: #666;
-            margin-bottom: 0.25rem;
+            gap: 0.5rem;
         }
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
             margin-bottom: 3rem;
         }
         
         .stat-card {
             background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            border-left: 5px solid;
-            transition: transform 0.3s ease;
-            text-align: center;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .stat-card.modules { border-left-color: #8e44ad; }
-        .stat-card.credits { border-left-color: #3498db; }
-        .stat-card.fall { border-left-color: #e67e22; }
-        .stat-card.spring { border-left-color: #2ecc71; }
-        .stat-card.summer { border-left-color: #f39c12; }
-        .stat-card.both { border-left-color: #e74c3c; }
         
         .stat-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
         }
         
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 0.5rem;
+        .stat-card:nth-child(1) .stat-icon { background: #3b82f6; }
+        .stat-card:nth-child(2) .stat-icon { background: #10b981; }
+        .stat-card:nth-child(3) .stat-icon { background: #f59e0b; }
+        .stat-card:nth-child(4) .stat-icon { background: #8b5cf6; }
+        
+        .stat-content h3 {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 0.25rem;
         }
         
-        .stat-label {
-            color: #666;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .stat-content p {
+            color: #6b7280;
+            font-weight: 500;
         }
         
         .content-grid {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: 2fr 1fr;
             gap: 2rem;
         }
         
-        .modules-section {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            padding: 2rem;
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
         }
         
-        .section-title {
-            font-size: 1.5rem;
-            color: #333;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-            border-bottom: 2px solid #8e44ad;
-            padding-bottom: 0.5rem;
+        .section-header h2 {
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #3b82f6;
+            border: 2px solid #3b82f6;
+        }
+        
+        .btn-outline:hover {
+            background: #3b82f6;
+            color: white;
         }
         
         .modules-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
         }
         
         .module-card {
-            background: #f8f9fa;
-            border-radius: 10px;
+            background: white;
             padding: 1.5rem;
-            border-left: 5px solid #8e44ad;
-            transition: transform 0.3s ease;
-        }
-        
-        .module-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
         
         .module-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-        }
-        
-        .module-code {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #8e44ad;
-        }
-        
-        .module-role {
-            background: #8e44ad;
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 15px;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-        }
-        
-        .module-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #333;
+            align-items: center;
             margin-bottom: 0.5rem;
         }
         
-        .module-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 0.5rem;
+        .module-header h3 {
+            color: #2c3e50;
+            font-size: 1.25rem;
+        }
+        
+        .credits {
+            background: #e5e7eb;
+            color: #6b7280;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+        
+        .module-title {
+            color: #6b7280;
             margin-bottom: 1rem;
         }
         
-        .module-detail {
-            font-size: 0.9rem;
-            color: #666;
+        .module-stats {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
         }
         
-        .module-description {
-            color: #555;
-            font-size: 0.9rem;
-            line-height: 1.4;
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .module-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .sessions-list {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .session-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .session-item:last-child {
+            border-bottom: none;
+        }
+        
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+        
+        .session-date {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .session-details {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .session-status {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .status-badge.completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
         }
         
         .empty-state {
             text-align: center;
-            padding: 4rem 2rem;
-            color: #666;
+            padding: 3rem 1rem;
+            color: #6b7280;
         }
         
-        .empty-state-icon {
-            font-size: 4rem;
+        .empty-state i {
+            font-size: 3rem;
             margin-bottom: 1rem;
-            color: #ddd;
+            color: #d1d5db;
+        }
+        
+        .text-link {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        
+        .text-link:hover {
+            text-decoration: underline;
         }
         
         @media (max-width: 768px) {
-            .container {
-                padding: 0 1rem;
-            }
-            
-            .profile-card {
+            .content-grid {
                 grid-template-columns: 1fr;
-                text-align: center;
             }
             
-            .nav-links {
-                display: none;
+            .navbar-menu {
+                flex-direction: column;
+                gap: 0.5rem;
             }
             
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            .section-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .module-actions {
+                flex-direction: column;
             }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-content">
-            <div class="logo">
-                👨‍🏫 Teacher Portal
+    <nav class="teacher-navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <a href="dashboard.php">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>PAW Teacher</span>
+                </a>
             </div>
-            <div class="nav-links">
-                <a href="#" class="nav-link">🏠 Home</a>
-                <a href="#modules" class="nav-link">📚 My Modules</a>
-                <a href="#" class="nav-link">📊 Reports</a>
+            
+            <div class="navbar-menu">
+                <a href="dashboard.php" class="nav-link active">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+                <a href="sessions.php" class="nav-link">
+                    <i class="fas fa-calendar-alt"></i>
+                    Sessions
+                </a>
+                <a href="attendance_summary.php" class="nav-link">
+                    <i class="fas fa-chart-bar"></i>
+                    Attendance Reports
+                </a>
             </div>
-            <div class="user-info">
-                <span>Welcome, <?php echo htmlspecialchars($user['username']); ?></span>
-                <div class="dropdown">
-                    <button class="dropdown-btn">
-                        ⚙️ Menu ▼
-                    </button>
-                    <div class="dropdown-content">
-                        <a href="#" class="dropdown-item">👤 Profile</a>
-                        <a href="../wamp_status.php" class="dropdown-item">📊 System Status</a>
-                        <a href="../auth/logout.php" class="dropdown-item">🚪 Logout</a>
-                    </div>
-                </div>
+            
+            <div class="user-menu">
+                <span class="user-name"><?php echo htmlspecialchars($teacher_name); ?></span>
+                <a href="../auth/logout.php" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
             </div>
         </div>
     </nav>
 
-    <div class="container">
+    <div class="main-container">
         <div class="page-header">
-            <h1>👨‍🏫 Teacher Dashboard</h1>
-            <div class="breadcrumb">
-                Home / Teacher / Dashboard
-            </div>
+            <h1><i class="fas fa-home"></i> Teacher Dashboard</h1>
+            <p>Welcome back, <?php echo htmlspecialchars($teacher_name); ?>!</p>
         </div>
 
-        <?php if ($teacher_profile): ?>
-        <div class="profile-card">
-            <div class="profile-avatar">
-                👨‍🏫
-            </div>
-            <div class="profile-info">
-                <h2><?php echo htmlspecialchars($teacher_profile['full_name']); ?></h2>
-                <div class="profile-detail"><strong>Teacher ID:</strong> <?php echo htmlspecialchars($teacher_profile['teacher_id'] ?? 'N/A'); ?></div>
-                <div class="profile-detail"><strong>Department:</strong> <?php echo htmlspecialchars($teacher_profile['department'] ?? 'N/A'); ?></div>
-                <div class="profile-detail"><strong>Position:</strong> <?php echo htmlspecialchars($teacher_profile['position'] ?? 'N/A'); ?></div>
-                <div class="profile-detail"><strong>Email:</strong> <?php echo htmlspecialchars($teacher_profile['email']); ?></div>
-                <?php if ($teacher_profile['specialization']): ?>
-                <div class="profile-detail"><strong>Specialization:</strong> <?php echo htmlspecialchars($teacher_profile['specialization']); ?></div>
-                <?php endif; ?>
-            </div>
-        </div>
-        <?php endif; ?>
-
+        <!-- Quick Stats -->
         <div class="stats-grid">
-            <div class="stat-card modules">
-                <div class="stat-icon">📚</div>
-                <div class="stat-number"><?php echo $stats['total_modules']; ?></div>
-                <div class="stat-label">Total Modules</div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><?php echo count($modules); ?></h3>
+                    <p>Assigned Modules</p>
+                </div>
             </div>
             
-            <div class="stat-card credits">
-                <div class="stat-icon">🎯</div>
-                <div class="stat-number"><?php echo $stats['total_credits']; ?></div>
-                <div class="stat-label">Total Credits</div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><?php echo array_sum(array_column($modules, 'today_sessions')); ?></h3>
+                    <p>Sessions Today</p>
+                </div>
             </div>
             
-            <div class="stat-card fall">
-                <div class="stat-icon">🍂</div>
-                <div class="stat-number"><?php echo $stats['fall_modules']; ?></div>
-                <div class="stat-label">Fall Semester</div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><?php echo array_sum(array_column($modules, 'enrolled_students')); ?></h3>
+                    <p>Total Students</p>
+                </div>
             </div>
             
-            <div class="stat-card spring">
-                <div class="stat-icon">🌸</div>
-                <div class="stat-number"><?php echo $stats['spring_modules']; ?></div>
-                <div class="stat-label">Spring Semester</div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><?php echo array_sum(array_column($modules, 'completed_sessions')); ?></h3>
+                    <p>Completed Sessions</p>
+                </div>
             </div>
-            
-            <?php if ($stats['summer_modules'] > 0): ?>
-            <div class="stat-card summer">
-                <div class="stat-icon">☀️</div>
-                <div class="stat-number"><?php echo $stats['summer_modules']; ?></div>
-                <div class="stat-label">Summer Semester</div>
-            </div>
-            <?php endif; ?>
-            
-            <?php if ($stats['both_modules'] > 0): ?>
-            <div class="stat-card both">
-                <div class="stat-icon">📅</div>
-                <div class="stat-number"><?php echo $stats['both_modules']; ?></div>
-                <div class="stat-label">Both Semesters</div>
-            </div>
-            <?php endif; ?>
         </div>
 
+        <!-- Modules and Sessions -->
         <div class="content-grid">
-            <div class="modules-section" id="modules">
-                <h2 class="section-title">📚 My Assigned Modules</h2>
+            <div class="modules-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-book"></i> My Modules</h2>
+                    <a href="sessions.php" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Create Session
+                    </a>
+                </div>
                 
-                <?php if (!empty($assigned_modules)): ?>
+                <?php if (empty($modules)): ?>
+                <div class="empty-state">
+                    <i class="fas fa-book-open"></i>
+                    <h3>No Modules Assigned</h3>
+                    <p>You haven't been assigned any modules yet. Contact the administrator.</p>
+                </div>
+                <?php else: ?>
                 <div class="modules-grid">
-                    <?php foreach ($assigned_modules as $module): ?>
+                    <?php foreach ($modules as $module): ?>
                     <div class="module-card">
                         <div class="module-header">
-                            <div class="module-code"><?php echo htmlspecialchars($module['module_code']); ?></div>
-                            <div class="module-role"><?php echo htmlspecialchars($module['teaching_role']); ?></div>
+                            <h3><?php echo htmlspecialchars($module['module_code']); ?></h3>
+                            <span class="credits"><?php echo $module['credits']; ?> credits</span>
                         </div>
                         
-                        <div class="module-name"><?php echo htmlspecialchars($module['module_name']); ?></div>
+                        <div class="module-title">
+                            <?php echo htmlspecialchars($module['module_name']); ?>
+                        </div>
                         
-                        <div class="module-details">
-                            <div class="module-detail">
-                                <strong>Credits:</strong> <?php echo $module['credits']; ?>
+                        <div class="module-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-users"></i>
+                                <span><?php echo $module['enrolled_students']; ?> students</span>
                             </div>
-                            <div class="module-detail">
-                                <strong>Year:</strong> <?php echo $module['year_level']; ?>
+                            <div class="stat-item">
+                                <i class="fas fa-calendar"></i>
+                                <span><?php echo $module['total_sessions']; ?> sessions</span>
                             </div>
-                            <div class="module-detail">
-                                <strong>Semester:</strong> <?php echo htmlspecialchars($module['semester']); ?>
-                            </div>
-                            <div class="module-detail">
-                                <strong>Department:</strong> <?php echo htmlspecialchars($module['department']); ?>
+                            <div class="stat-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span><?php echo $module['completed_sessions']; ?> completed</span>
                             </div>
                         </div>
                         
-                        <?php if ($module['description']): ?>
-                        <div class="module-description">
-                            <?php echo htmlspecialchars($module['description']); ?>
+                        <div class="module-actions">
+                            <a href="sessions.php?module_id=<?php echo $module['id']; ?>" class="btn btn-outline">
+                                <i class="fas fa-calendar-alt"></i>
+                                View Sessions
+                            </a>
+                            <a href="mark_attendance.php?module_id=<?php echo $module['id']; ?>" class="btn btn-primary">
+                                <i class="fas fa-check"></i>
+                                Take Attendance
+                            </a>
                         </div>
-                        <?php endif; ?>
                     </div>
                     <?php endforeach; ?>
                 </div>
-                <?php else: ?>
+                <?php endif; ?>
+            </div>
+
+            <div class="recent-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-clock"></i> Recent Sessions</h2>
+                    <a href="sessions.php" class="text-link">View All</a>
+                </div>
+                
+                <?php if (empty($recent_sessions)): ?>
                 <div class="empty-state">
-                    <div class="empty-state-icon">📚</div>
-                    <h3>No Modules Assigned</h3>
-                    <p>You don't have any modules assigned yet. Please contact your administrator.</p>
+                    <i class="fas fa-calendar-times"></i>
+                    <h3>No Recent Sessions</h3>
+                    <p>No sessions in the last 7 days.</p>
+                </div>
+                <?php else: ?>
+                <div class="sessions-list">
+                    <?php foreach ($recent_sessions as $session): ?>
+                    <div class="session-item">
+                        <div class="session-info">
+                            <div class="session-header">
+                                <strong><?php echo htmlspecialchars($session['module_code']); ?></strong>
+                                <span class="session-date"><?php echo date('M j', strtotime($session['session_date'])); ?></span>
+                            </div>
+                            <div class="session-details">
+                                <span class="session-time">
+                                    <i class="fas fa-clock"></i>
+                                    <?php echo date('H:i', strtotime($session['start_time'])); ?> - <?php echo date('H:i', strtotime($session['end_time'])); ?>
+                                </span>
+                                <span class="session-location">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <?php echo htmlspecialchars($session['location'] ?: 'TBA'); ?>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="session-status">
+                            <?php if ($session['attendance_taken']): ?>
+                                <span class="status-badge completed">
+                                    <i class="fas fa-check"></i>
+                                    Completed
+                                </span>
+                                <small><?php echo $session['attendance_count']; ?>/<?php echo $session['enrolled_count']; ?> attended</small>
+                            <?php else: ?>
+                                <a href="mark_attendance.php?session_id=<?php echo $session['id']; ?>" class="btn btn-sm">
+                                    <i class="fas fa-check"></i>
+                                    Take Attendance
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
                 <?php endif; ?>
             </div>

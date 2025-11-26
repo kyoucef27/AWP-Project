@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS students (
     user_id INT,
     student_number VARCHAR(20) UNIQUE,
     specialization VARCHAR(100),
+    specialty ENUM('Computer Science', 'Software Engineering', 'Information Systems', 'Data Science') DEFAULT 'Computer Science',
     year_of_study INT,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -69,6 +70,7 @@ CREATE TABLE IF NOT EXISTS modules (
     description TEXT,
     credits INT DEFAULT 3,
     department VARCHAR(100),
+    specialty VARCHAR(200) DEFAULT 'All',
     year_level INT,
     semester ENUM('Fall', 'Spring', 'Summer', 'Both') DEFAULT 'Both',
     is_active BOOLEAN DEFAULT TRUE,
@@ -92,6 +94,78 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     ip_address VARCHAR(45) NOT NULL,
     attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     successful BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS student_groups (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    group_name VARCHAR(100) NOT NULL,
+    year_level INT NOT NULL,
+    specialization VARCHAR(100) NOT NULL,
+    max_capacity INT DEFAULT 30,
+    current_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_group (group_name, year_level, specialization)
+);
+
+CREATE TABLE IF NOT EXISTS student_group_assignments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    group_id INT NOT NULL,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES student_groups(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_student_assignment (student_id)
+);
+
+CREATE TABLE IF NOT EXISTS module_group_assignments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    module_id INT NOT NULL,
+    group_id INT NOT NULL,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES student_groups(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_module_group (module_id, group_id)
+);
+
+CREATE TABLE IF NOT EXISTS enrollments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    module_id INT NOT NULL,
+    enrollment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('active', 'dropped', 'completed') DEFAULT 'active',
+    grade VARCHAR(5),
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_enrollment (student_id, module_id)
+);
+
+CREATE TABLE IF NOT EXISTS attendance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    enrollment_id INT NOT NULL,
+    attendance_date DATE NOT NULL,
+    status ENUM('present', 'absent', 'late', 'excused') DEFAULT 'absent',
+    remarks TEXT,
+    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    recorded_by INT,
+    FOREIGN KEY (enrollment_id) REFERENCES enrollments(id) ON DELETE CASCADE,
+    FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL,
+    UNIQUE KEY unique_attendance (enrollment_id, attendance_date)
+);
+
+CREATE TABLE IF NOT EXISTS absence_justifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    attendance_id INT NOT NULL,
+    student_id INT NOT NULL,
+    justification_text TEXT NOT NULL,
+    supporting_document VARCHAR(255),
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    reviewed_by INT,
+    reviewed_at TIMESTAMP NULL,
+    review_notes TEXT,
+    FOREIGN KEY (attendance_id) REFERENCES attendance(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
 );
 ";
 

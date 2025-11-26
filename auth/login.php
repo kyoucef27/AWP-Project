@@ -17,7 +17,7 @@ if (isset($_SESSION['user_id'])) {
             header("Location: ../teacher/dashboard.php");
             break;
         case 'student':
-            header("Location: ../student/dashboard.php");
+            header("Location: ../student/home.php");
             break;
         default:
             header("Location: ../index.html");
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             header("Location: ../teacher/dashboard.php");
                             break;
                         case 'student':
-                            header("Location: ../student/dashboard.php");
+                            header("Location: ../student/home.php");
                             break;
                         default:
                             header("Location: ../index.html");
@@ -387,12 +387,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <em>Full system access</em>
                 </div>
                 <div class="demo-account">
-                    <strong>Professor:</strong> prof.smith / prof123<br>
-                    <em>Course & attendance management</em>
+                    <strong>Teacher:</strong> prof.kowalski / 123456<br>
+                    <em>Session & attendance management</em>
                 </div>
                 <div class="demo-account">
-                    <strong>Student:</strong> student.alice / student123<br>
-                    <em>View attendance & submit justifications</em>
+                    <strong>Student:</strong> soumia.lahlou / 123456<br>
+                    <em>View courses & attendance tracking</em>
                 </div>
             </div>
             

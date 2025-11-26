@@ -1,8 +1,18 @@
-# Prevent direct access to uploaded files
-Order Deny,Allow
-Deny from all
+# Prevent direct access to uploaded files except justifications
+Order Allow,Deny
 
-# Allow only specific file types if needed
-<FilesMatch "\.(csv|xlsx|xls)$">
+# Allow all access to justifications subdirectory
+<Directory "justifications">
+    Order Allow,Deny
+    Allow from all
+</Directory>
+
+# Deny access to sensitive file types in root uploads
+<FilesMatch "\.(php|html|htm|js|css|sh|pl|py)$">
+    Deny from all
+</FilesMatch>
+
+# Allow only specific file types for general uploads
+<FilesMatch "\.(csv|xlsx|xls|pdf|jpg|jpeg|png|doc|docx)$">
     Allow from all
 </FilesMatch>

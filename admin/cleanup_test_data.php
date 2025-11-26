@@ -267,8 +267,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm'])) {
             <h3>⚙️ Quick Actions</h3>
             <a href="dashboard.php" class="btn btn-primary">🏠 Admin Dashboard</a>
             <a href="utilities/system_diagnostics.php" class="btn btn-secondary">🔧 System Diagnostics</a>
-            <a href="teacher_management.php" class="btn btn-secondary">👨‍🏫 Teacher Management</a>
-            <a href="module_management.php" class="btn btn-secondary">📚 Module Management</a>
+            <a href="teacher_management/teacher_management.php" class="btn btn-secondary">👨‍🏫 Teacher Management</a>
+            <a href="module_management/module_management.php" class="btn btn-secondary">📚 Module Management</a>
         </div>
     </div>
 

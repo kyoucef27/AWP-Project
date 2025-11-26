@@ -178,7 +178,7 @@ $user = isset($_SESSION['user_id']) ? [
                     switch($user['role']) {
                         case 'admin': echo '../admin/dashboard.php'; break;
                         case 'professor': echo '../professor/dashboard.php'; break;
-                        case 'student': echo '../student/dashboard.php'; break;
+                        case 'student': echo '../student/home.php'; break;
                         default: echo '../index.html'; break;
                     }
                 ?>" class="btn btn-primary">
