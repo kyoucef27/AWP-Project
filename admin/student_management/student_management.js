@@ -1,95 +1,99 @@
 // Search functionality
-document.getElementById('searchBox').addEventListener('keyup', function() {
-    const searchTerm = this.value.toLowerCase();
-    const table = document.getElementById('studentsTable');
-    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-    
-    for (let i = 0; i < rows.length; i++) {
-        let row = rows[i];
-        let text = row.textContent.toLowerCase();
+$(document).ready(function() {
+    $('#searchBox').on('keyup', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        const $table = $('#studentsTable');
+        const $rows = $table.find('tbody tr');
         
-        if (text.includes(searchTerm)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
+        $rows.each(function() {
+            let text = $(this).text().toLowerCase();
+            
+            if (text.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    });
+
+    // File upload feedback
+    $('#excel_file').on('change', function() {
+        if (this.files.length > 0) {
+            $('.file-upload').html(
+                '<div class="file-upload-icon">📁</div>' +
+                '<div>Selected: ' + this.files[0].name + '</div>' +
+                '<small style="color: #666;">File will be uploaded...</small>'
+            );
         }
-    }
+    });
+
+    // Close modal when clicking outside of it
+    $(window).on('click', function(event) {
+        var $modal = $('#editStudentModal');
+        if ($modal.length && event.target === $modal[0]) {
+            $modal.hide();
+        }
+    });
 });
 
 // Edit student function
 function editStudent(studentId) {
     // Fetch student data via AJAX
-    fetch('../api/get_student_data.php?id=' + studentId)
-        .then(response => response.json())
-        .then(data => {
+    $.ajax({
+        url: '../api/get_student_data.php?id=' + studentId,
+        method: 'GET',
+        dataType: 'json',
+        success: function(data) {
             if (data.success) {
                 // Populate the edit form with existing data
-                document.getElementById('edit_student_id').value = data.student.id;
-                document.getElementById('edit_student_number').value = data.student.student_number || '';
-                document.getElementById('edit_username').value = data.student.username;
-                document.getElementById('edit_full_name').value = data.student.full_name;
-                document.getElementById('edit_email').value = data.student.email;
-                document.getElementById('edit_specialization').value = data.student.specialization || '';
-                document.getElementById('edit_year_of_study').value = data.student.year_of_study || '';
+                $('#edit_student_id').val(data.student.id);
+                $('#edit_student_number').val(data.student.student_number || '');
+                $('#edit_username').val(data.student.username);
+                $('#edit_full_name').val(data.student.full_name);
+                $('#edit_email').val(data.student.email);
+                $('#edit_specialization').val(data.student.specialization || '');
+                $('#edit_year_of_study').val(data.student.year_of_study || '');
                 
                 // Clear password field
-                document.getElementById('edit_password').value = '';
+                $('#edit_password').val('');
                 
                 // Show the modal
-                document.getElementById('editStudentModal').style.display = 'block';
+                $('#editStudentModal').show();
             } else {
                 alert('Error loading student data: ' + data.error);
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
+        },
+        error: function() {
             alert('Error loading student data');
-        });
+        }
+    });
 }
 
 function closeEditModal() {
-    document.getElementById('editStudentModal').style.display = 'none';
+    $('#editStudentModal').hide();
 }
-
-// Close modal when clicking outside of it
-window.onclick = function(event) {
-    var modal = document.getElementById('editStudentModal');
-    if (event.target == modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// File upload feedback
-document.getElementById('excel_file').addEventListener('change', function() {
-    if (this.files.length > 0) {
-        document.querySelector('.file-upload').innerHTML = 
-            '<div class="file-upload-icon">📁</div>' +
-            '<div>Selected: ' + this.files[0].name + '</div>' +
-            '<small style="color: #666;">File will be uploaded...</small>';
-    }
-});
 
 // Export feedback
 function showExportFeedback(format) {
     // Create a temporary notification
-    const notification = document.createElement('div');
-    notification.style.position = 'fixed';
-    notification.style.top = '20px';
-    notification.style.right = '20px';
-    notification.style.background = '#2ecc71';
-    notification.style.color = 'white';
-    notification.style.padding = '1rem';
-    notification.style.borderRadius = '8px';
-    notification.style.zIndex = '9999';
-    notification.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
-    notification.innerHTML = `📥 Preparing ${format} export...`;
+    const $notification = $('<div>')
+        .css({
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            background: '#2ecc71',
+            color: 'white',
+            padding: '1rem',
+            borderRadius: '8px',
+            zIndex: '9999',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+        })
+        .html(`📥 Preparing ${format} export...`);
     
-    document.body.appendChild(notification);
+    $('body').append($notification);
     
     // Remove notification after 3 seconds
     setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-        }
+        $notification.remove();
     }, 3000);
 }

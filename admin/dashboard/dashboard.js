@@ -1,17 +1,15 @@
-// Admin Dashboard JavaScript
-document.addEventListener('DOMContentLoaded', function() {
+// Admin Dashboard jQuery
+$(document).ready(function() {
     // Smooth scroll for internal links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
+    $('a[href^="#"]').on('click', function(e) {
+        e.preventDefault();
+        const target = $($(this).attr('href'));
+        if (target.length) {
+            target[0].scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
     });
 
     // Animate stat numbers on load
@@ -22,10 +20,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function animateStatNumbers() {
-    const statNumbers = document.querySelectorAll('.stat-number');
-    
-    statNumbers.forEach(stat => {
-        const target = parseInt(stat.textContent);
+    $('.stat-number').each(function() {
+        const $stat = $(this);
+        const target = parseInt($stat.text());
         if (isNaN(target)) return;
         
         let current = 0;
@@ -33,38 +30,31 @@ function animateStatNumbers() {
         const timer = setInterval(() => {
             current += increment;
             if (current >= target) {
-                stat.textContent = target;
+                $stat.text(target);
                 clearInterval(timer);
             } else {
-                stat.textContent = Math.floor(current);
+                $stat.text(Math.floor(current));
             }
         }, 20);
     });
 }
 
 function addCardInteractions() {
-    const cards = document.querySelectorAll('.dashboard-card, .health-card');
-    
-    cards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-        });
-        
-        card.addEventListener('mouseleave', function() {
-            this.style.transition = 'all 0.3s ease';
+    $('.dashboard-card, .health-card').each(function() {
+        $(this).on('mouseenter', function() {
+            $(this).css('transition', 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)');
+        }).on('mouseleave', function() {
+            $(this).css('transition', 'all 0.3s ease');
         });
     });
 }
 
 // Refresh system health status
 function refreshSystemHealth() {
-    const healthCards = document.querySelectorAll('.health-card');
-    healthCards.forEach(card => {
-        card.style.opacity = '0.6';
-        setTimeout(() => {
-            card.style.opacity = '1';
-        }, 500);
-    });
+    $('.health-card').css('opacity', '0.6');
+    setTimeout(() => {
+        $('.health-card').css('opacity', '1');
+    }, 500);
 }
 
 // Optional: Auto-refresh stats every 5 minutes

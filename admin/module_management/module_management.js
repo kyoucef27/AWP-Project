@@ -1,19 +1,17 @@
-// Module Management JavaScript
+// Module Management jQuery
 
 // Search functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const searchBox = document.getElementById('searchBox');
-    if (searchBox) {
-        searchBox.addEventListener('keyup', function() {
-            var searchTerm = this.value.toLowerCase();
-            var rows = document.querySelectorAll('tbody tr');
-            
-            rows.forEach(function(row) {
-                var text = row.textContent.toLowerCase();
+$(document).ready(function() {
+    const $searchBox = $('#searchBox');
+    if ($searchBox.length) {
+        $searchBox.on('keyup', function() {
+            var searchTerm = $(this).val().toLowerCase();
+            $('tbody tr').each(function() {
+                var text = $(this).text().toLowerCase();
                 if (text.includes(searchTerm)) {
-                    row.style.display = '';
+                    $(this).show();
                 } else {
-                    row.style.display = 'none';
+                    $(this).hide();
                 }
             });
         });
@@ -22,62 +20,66 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // View module function
 function viewModule(moduleId) {
-    fetch('../api/get_module_data.php?id=' + moduleId + '&view=full')
-        .then(response => response.json())
-        .then(data => {
+    $.ajax({
+        url: '../api/get_module_data.php?id=' + moduleId + '&view=full',
+        method: 'GET',
+        dataType: 'json',
+        success: function(data) {
             if (data.success) {
-                document.getElementById('moduleDetails').innerHTML = data.html;
-                document.getElementById('viewModuleModal').style.display = 'block';
+                $('#moduleDetails').html(data.html);
+                $('#viewModuleModal').show();
             } else {
                 alert('Error loading module data: ' + data.error);
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
+        },
+        error: function() {
             alert('Error loading module data');
-        });
+        }
+    });
 }
 
 // Edit module function
 function editModule(moduleId) {
-    fetch('../api/get_module_data.php?id=' + moduleId)
-        .then(response => response.json())
-        .then(data => {
+    $.ajax({
+        url: '../api/get_module_data.php?id=' + moduleId,
+        method: 'GET',
+        dataType: 'json',
+        success: function(data) {
             if (data.success) {
                 const module = data.module;
-                document.getElementById('edit_module_id').value = module.id;
-                document.getElementById('edit_module_code').value = module.module_code;
-                document.getElementById('edit_module_name').value = module.module_name;
-                document.getElementById('edit_description').value = module.description || '';
-                document.getElementById('edit_credits').value = module.credits;
-                document.getElementById('edit_department').value = module.department;
-                document.getElementById('edit_year_level').value = module.year_level;
-                document.getElementById('edit_semester').value = module.semester;
-                document.getElementById('edit_is_active').checked = module.is_active == 1;
+                $('#edit_module_id').val(module.id);
+                $('#edit_module_code').val(module.module_code);
+                $('#edit_module_name').val(module.module_name);
+                $('#edit_description').val(module.description || '');
+                $('#edit_credits').val(module.credits);
+                $('#edit_department').val(module.department);
+                $('#edit_year_level').val(module.year_level);
+                $('#edit_semester').val(module.semester);
+                $('#edit_is_active').prop('checked', module.is_active == 1);
                 
-                document.getElementById('editModuleModal').style.display = 'block';
+                $('#editModuleModal').show();
             } else {
                 alert('Error loading module data: ' + data.error);
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
+        },
+        error: function() {
             alert('Error loading module data');
-        });
+        }
+    });
 }
 
 // Close modal function
 function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    $('#' + modalId).hide();
 }
 
 // Import modal functions
 function openImportModal() {
-    document.getElementById('importModal').style.display = 'block';
+    $('#importModal').show();
 }
 
 function closeImportModal() {
-    document.getElementById('importModal').style.display = 'none';
+    $('#importModal').hide();
 }
 
 // Export modules function
@@ -86,12 +88,14 @@ function exportModules(format) {
 }
 
 // Close modals when clicking outside
-window.onclick = function(event) {
-    var modals = ['viewModuleModal', 'editModuleModal', 'importModal'];
-    modals.forEach(function(modalId) {
-        var modal = document.getElementById(modalId);
-        if (modal && event.target == modal) {
-            modal.style.display = 'none';
-        }
+$(document).ready(function() {
+    $(window).on('click', function(event) {
+        var modals = ['viewModuleModal', 'editModuleModal', 'importModal'];
+        modals.forEach(function(modalId) {
+            var $modal = $('#' + modalId);
+            if ($modal.length && event.target === $modal[0]) {
+                $modal.hide();
+            }
+        });
     });
-}
+});

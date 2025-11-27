@@ -1,13 +1,13 @@
-// Student Profile Page JavaScript Functions
+// Student Profile Page jQuery Functions
 
-// Form validation for password change
-document.addEventListener('DOMContentLoaded', function() {
-    const confirmPasswordField = document.querySelector('form input[name="confirm_password"]');
+$(document).ready(function() {
+    // Form validation for password change
+    const $confirmPasswordField = $('form input[name="confirm_password"]');
     
-    if (confirmPasswordField) {
-        confirmPasswordField.addEventListener('input', function() {
-            const newPassword = document.querySelector('input[name="new_password"]').value;
-            const confirmPassword = this.value;
+    if ($confirmPasswordField.length) {
+        $confirmPasswordField.on('input', function() {
+            const newPassword = $('input[name="new_password"]').val();
+            const confirmPassword = $(this).val();
             
             if (newPassword && confirmPassword && newPassword !== confirmPassword) {
                 this.setCustomValidity('Passwords do not match');
@@ -18,10 +18,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Auto-hide alerts after 5 seconds
-    document.querySelectorAll('.alert').forEach(alert => {
+    $('.alert').each(function() {
+        const $alert = $(this);
         setTimeout(() => {
-            alert.style.opacity = '0';
-            setTimeout(() => alert.remove(), 300);
+            $alert.css('opacity', '0');
+            setTimeout(() => $alert.remove(), 300);
         }, 5000);
     });
 });

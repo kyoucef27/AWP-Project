@@ -11,7 +11,7 @@ const chartOptions = {
 
 // User Growth Chart
 function initUserGrowthChart(monthlyData) {
-    const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
+    const userGrowthCtx = $('#userGrowthChart')[0].getContext('2d');
     
     new Chart(userGrowthCtx, {
         type: 'line',
@@ -37,7 +37,7 @@ function initUserGrowthChart(monthlyData) {
 
 // User Distribution Chart
 function initUserDistributionChart(stats) {
-    const userDistCtx = document.getElementById('userDistributionChart').getContext('2d');
+    const userDistCtx = $('#userDistributionChart')[0].getContext('2d');
     new Chart(userDistCtx, {
         type: 'doughnut',
         data: {
@@ -53,7 +53,7 @@ function initUserDistributionChart(stats) {
 
 // Activity Chart
 function initActivityChart(activityData) {
-    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    const activityCtx = $('#activityChart')[0].getContext('2d');
     
     new Chart(activityCtx, {
         type: 'bar',
@@ -75,7 +75,7 @@ function initActivityChart(activityData) {
 
 // Login Trends Chart
 function initLoginTrendsChart() {
-    const loginTrendsCtx = document.getElementById('loginTrendsChart').getContext('2d');
+    const loginTrendsCtx = $('#loginTrendsChart')[0].getContext('2d');
     new Chart(loginTrendsCtx, {
         type: 'line',
         data: {
@@ -93,6 +93,6 @@ function initLoginTrendsChart() {
 }
 
 // Initialize all charts when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+$(document).ready(function() {
     // Charts will be initialized by inline script that passes PHP data
 });

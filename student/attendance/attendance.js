@@ -1,16 +1,16 @@
-// Student Attendance Page JavaScript Functions
+// Student Attendance Page jQuery Functions
 
 function openJustificationModal(attendanceId, courseName, date) {
-    document.getElementById('modal_attendance_id').value = attendanceId;
-    document.getElementById('modal_course_name').textContent = courseName;
-    document.getElementById('modal_date').textContent = date;
-    document.getElementById('justificationModal').style.display = 'flex';
+    $('#modal_attendance_id').val(attendanceId);
+    $('#modal_course_name').text(courseName);
+    $('#modal_date').text(date);
+    $('#justificationModal').css('display', 'flex');
 }
 
 function closeJustificationModal() {
-    document.getElementById('justificationModal').style.display = 'none';
-    document.getElementById('justification_text').value = '';
-    document.getElementById('document').value = '';
+    $('#justificationModal').css('display', 'none');
+    $('#justification_text').val('');
+    $('#document').val('');
 }
 
 function viewJustification(justificationId) {
@@ -18,10 +18,12 @@ function viewJustification(justificationId) {
     window.open('../utilities/view_justification.php?id=' + justificationId, '_blank');
 }
 
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const modal = document.getElementById('justificationModal');
-    if (event.target === modal) {
-        closeJustificationModal();
-    }
-}
+$(document).ready(function() {
+    // Close modal when clicking outside
+    $(window).on('click', function(event) {
+        const modal = $('#justificationModal')[0];
+        if (event.target === modal) {
+            closeJustificationModal();
+        }
+    });
+});

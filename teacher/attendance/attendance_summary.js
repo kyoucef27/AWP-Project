@@ -1,20 +1,22 @@
-// Teacher Attendance Summary JavaScript Functions
+// Teacher Attendance Summary jQuery Functions
 
-// Auto-submit form when report type changes
-document.getElementById('report_type').addEventListener('change', function() {
-    // Clear specialty filter when switching to sessions report
-    if (this.value === 'sessions') {
-        const specialtySelect = document.getElementById('specialty');
-        if (specialtySelect) {
-            specialtySelect.value = '';
+$(document).ready(function() {
+    // Auto-submit form when report type changes
+    $('#report_type').on('change', function() {
+        // Clear specialty filter when switching to sessions report
+        if ($(this).val() === 'sessions') {
+            const $specialtySelect = $('#specialty');
+            if ($specialtySelect.length) {
+                $specialtySelect.val('');
+            }
         }
-    }
-    this.form.submit();
-});
+        $(this).closest('form').submit();
+    });
 
-// Auto-submit form when module changes
-document.getElementById('module_id').addEventListener('change', function() {
-    if (this.value) {
-        this.form.submit();
-    }
+    // Auto-submit form when module changes
+    $('#module_id').on('change', function() {
+        if ($(this).val()) {
+            $(this).closest('form').submit();
+        }
+    });
 });

@@ -135,6 +135,7 @@ $attendance_rate = $attendance_stats['total_sessions'] > 0 ?
     <link rel="stylesheet" href="../../css/components.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="profile.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body>
     <!-- Student Navigation -->
