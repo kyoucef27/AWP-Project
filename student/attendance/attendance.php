@@ -2,11 +2,11 @@
 session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-require_once '../includes/config.php';
+require_once '../../includes/config.php';
 
 // Check if user is logged in and is a student
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-    header("Location: ../auth/login.php");
+    header("Location: ../../auth/login.php");
     exit();
 }
 
@@ -230,7 +230,7 @@ try {
                 <span>Student Portal</span>
             </div>
             <div class="nav-links">
-                <a href="home.php" class="nav-link">
+                <a href="../dashboard/dashboard.php" class="nav-link">
                     <i class="fas fa-home"></i>
                     <span>My Courses</span>
                 </a>
@@ -238,7 +238,7 @@ try {
                     <i class="fas fa-calendar-check"></i>
                     <span>Attendance</span>
                 </a>
-                <a href="profile.php" class="nav-link">
+                <a href="../profile/profile.php" class="nav-link">
                     <i class="fas fa-user"></i>
                     <span>Profile</span>
                 </a>
@@ -250,7 +250,7 @@ try {
                     </div>
                     <span class="user-name"><?php echo htmlspecialchars($student['full_name']); ?></span>
                 </div>
-                <a href="../auth/logout.php" class="logout-btn">
+                <a href="../../auth/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -568,32 +568,6 @@ try {
         </div>
     </div>
 
-    <script>
-        function openJustificationModal(attendanceId, courseName, date) {
-            document.getElementById('modal_attendance_id').value = attendanceId;
-            document.getElementById('modal_course_name').textContent = courseName;
-            document.getElementById('modal_date').textContent = date;
-            document.getElementById('justificationModal').style.display = 'flex';
-        }
-
-        function closeJustificationModal() {
-            document.getElementById('justificationModal').style.display = 'none';
-            document.getElementById('justification_text').value = '';
-            document.getElementById('document').value = '';
-        }
-
-        function viewJustification(justificationId) {
-            // Open justification viewer in new tab
-            window.open('view_justification.php?id=' + justificationId, '_blank');
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('justificationModal');
-            if (event.target === modal) {
-                closeJustificationModal();
-            }
-        }
-    </script>
+    <script src="attendance.js"></script>
 </body>
 </html>

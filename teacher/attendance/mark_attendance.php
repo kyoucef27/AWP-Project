@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once '../includes/config.php';
+require_once '../../includes/config.php';
 
 // Check if user is logged in and is a teacher
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
-    header("Location: ../auth/login.php");
+    header("Location: ../../auth/login.php");
     exit();
 }
 
@@ -232,420 +232,24 @@ if ($session_id && $session) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mark Attendance - PAW Project</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* Teacher Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f8f9fa;
-            color: #2c3e50;
-            line-height: 1.6;
-        }
-        
-        .teacher-navbar {
-            background: linear-gradient(135deg, #2c5aa0 0%, #1e3a8a 100%);
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .navbar-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .navbar-brand a {
-            color: white;
-            text-decoration: none;
-            font-size: 1.5rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .navbar-menu {
-            display: flex;
-            gap: 2rem;
-        }
-        
-        .nav-link {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background 0.3s ease;
-        }
-        
-        .nav-link:hover, .nav-link.active {
-            background: rgba(255,255,255,0.2);
-        }
-        
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .logout-btn {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border: 1px solid white;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .logout-btn:hover {
-            background: white;
-            color: #2c5aa0;
-        }
-        
-        .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-        
-        .page-header {
-            margin-bottom: 2rem;
-        }
-        
-        .page-header h1 {
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .breadcrumb {
-            color: #6b7280;
-            font-size: 0.875rem;
-        }
-        
-        .breadcrumb a {
-            color: #3b82f6;
-            text-decoration: none;
-        }
-        
-        .alert {
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .alert.success {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #10b981;
-        }
-        
-        .alert.error {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #ef4444;
-        }
-        
-        .selection-section {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
-        }
-        
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .form-group label {
-            font-weight: 500;
-            color: #374151;
-        }
-        
-        .form-control {
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-        
-        .btn-success {
-            background: #10b981;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background: #059669;
-        }
-        
-        .btn-outline {
-            background: transparent;
-            color: #3b82f6;
-            border: 2px solid #3b82f6;
-        }
-        
-        .btn-outline:hover {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .session-info {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
-        }
-        
-        .session-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-        
-        .detail-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #6b7280;
-        }
-        
-        .detail-item strong {
-            color: #2c3e50;
-        }
-        
-        .attendance-section {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-        
-        .section-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .section-header h2 {
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .bulk-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .btn-sm {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-        }
-        
-        .students-list {
-            padding: 1.5rem;
-        }
-        
-        .student-item {
-            display: flex;
-            align-items: center;
-            padding: 1rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            transition: all 0.3s ease;
-        }
-        
-        .student-item:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .student-item.present {
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
-        
-        .student-checkbox {
-            width: 20px;
-            height: 20px;
-            margin-right: 1rem;
-            cursor: pointer;
-        }
-        
-        .student-info {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 1rem;
-            align-items: center;
-        }
-        
-        .student-name {
-            font-weight: 500;
-            color: #2c3e50;
-        }
-        
-        .student-number {
-            color: #6b7280;
-            font-size: 0.875rem;
-        }
-        
-        .student-specialty {
-            color: #6b7280;
-            font-size: 0.875rem;
-        }
-        
-        .attendance-status {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            font-size: 0.875rem;
-        }
-        
-        .status-present {
-            color: #059669;
-        }
-        
-        .status-absent {
-            color: #dc2626;
-        }
-        
-        .submit-section {
-            padding: 1.5rem;
-            border-top: 1px solid #e5e7eb;
-            background: #f9fafb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .attendance-summary {
-            color: #6b7280;
-            font-size: 0.875rem;
-        }
-        
-        .sessions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .session-card {
-            padding: 1rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .session-card:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .session-card.completed {
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: #6b7280;
-        }
-        
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: #d1d5db;
-        }
-        
-        @media (max-width: 768px) {
-            .session-details {
-                grid-template-columns: 1fr;
-            }
-            
-            .student-info {
-                grid-template-columns: 1fr;
-            }
-            
-            .submit-section {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="mark_attendance.css">
 </head>
 <body>
     <nav class="teacher-navbar">
         <div class="navbar-container">
             <div class="navbar-brand">
-                <a href="dashboard.php">
+                <a href="../dashboard/dashboard.php">
                     <i class="fas fa-chalkboard-teacher"></i>
                     <span>PAW Teacher</span>
                 </a>
             </div>
             
             <div class="navbar-menu">
-                <a href="dashboard.php" class="nav-link">
+                <a href="../dashboard/dashboard.php" class="nav-link">
                     <i class="fas fa-home"></i>
                     Dashboard
                 </a>
-                <a href="sessions.php" class="nav-link">
+                <a href="../sessions/sessions.php" class="nav-link">
                     <i class="fas fa-calendar-alt"></i>
                     Sessions
                 </a>
@@ -657,7 +261,7 @@ if ($session_id && $session) {
             
             <div class="user-menu">
                 <span class="user-name"><?php echo htmlspecialchars($teacher_name); ?></span>
-                <a href="../auth/logout.php" class="logout-btn">
+                <a href="../../auth/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </a>
@@ -669,7 +273,7 @@ if ($session_id && $session) {
         <div class="page-header">
             <h1><i class="fas fa-check"></i> Mark Attendance</h1>
             <div class="breadcrumb">
-                <a href="dashboard.php">Dashboard</a> / 
+                <a href="../dashboard/dashboard.php">Dashboard</a> / 
                 <a href="sessions.php">Sessions</a> / 
                 Mark Attendance
             </div>
@@ -881,62 +485,6 @@ if ($session_id && $session) {
         <?php endif; ?>
     </div>
 
-    <script>
-        function selectAll() {
-            const checkboxes = document.querySelectorAll('.student-checkbox');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = true;
-                updateStudentStatus(checkbox);
-            });
-            updateSummary();
-        }
-        
-        function selectNone() {
-            const checkboxes = document.querySelectorAll('.student-checkbox');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = false;
-                updateStudentStatus(checkbox);
-            });
-            updateSummary();
-        }
-        
-        function updateStudentStatus(checkbox) {
-            const studentItem = checkbox.closest('.student-item');
-            const statusElement = studentItem.querySelector('.attendance-status');
-            
-            if (checkbox.checked) {
-                studentItem.classList.add('present');
-                statusElement.innerHTML = '<span class="status-present"><i class="fas fa-check"></i> Present</span>';
-            } else {
-                studentItem.classList.remove('present');
-                statusElement.innerHTML = '<span class="status-absent"><i class="fas fa-times"></i> Absent</span>';
-            }
-            
-            updateSummary();
-        }
-        
-        function updateSummary() {
-            const checkboxes = document.querySelectorAll('.student-checkbox');
-            const presentCount = document.querySelectorAll('.student-checkbox:checked').length;
-            const totalCount = checkboxes.length;
-            const absentCount = totalCount - presentCount;
-            
-            document.getElementById('presentCount').textContent = presentCount;
-            document.getElementById('absentCount').textContent = absentCount;
-        }
-        
-        // Add change listeners to all checkboxes
-        document.addEventListener('DOMContentLoaded', function() {
-            const checkboxes = document.querySelectorAll('.student-checkbox');
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    updateStudentStatus(this);
-                });
-            });
-            
-            // Initial summary update
-            updateSummary();
-        });
-    </script>
+    <script src="mark_attendance.js"></script>
 </body>
 </html>

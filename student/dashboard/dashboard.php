@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once '../includes/config.php';
+require_once '../../includes/config.php';
 
 // Check if user is logged in and is a student
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-    header("Location: ../auth/login.php");
+    header("Location: ../../auth/login.php");
     exit();
 }
 
@@ -109,7 +109,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Courses - PAW Project</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
     <nav class="navbar">
@@ -119,15 +119,15 @@ try {
                 <span>Student Portal</span>
             </div>
             <div class="nav-links">
-                <a href="home.php" class="nav-link active">
+                <a href="dashboard.php" class="nav-link active">
                     <i class="fas fa-home"></i>
                     <span>My Courses</span>
                 </a>
-                <a href="attendance.php" class="nav-link">
+                <a href="../attendance/attendance.php" class="nav-link">
                     <i class="fas fa-calendar-check"></i>
                     <span>Attendance</span>
                 </a>
-                <a href="profile.php" class="nav-link">
+                <a href="../profile/profile.php" class="nav-link">
                     <i class="fas fa-user"></i>
                     <span>Profile</span>
                 </a>
@@ -139,7 +139,7 @@ try {
                     </div>
                     <span class="user-name"><?php echo htmlspecialchars($student['full_name']); ?></span>
                 </div>
-                <a href="../auth/logout.php" class="logout-btn">
+                <a href="../../auth/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -302,12 +302,12 @@ try {
                         </div>
 
                         <div class="course-actions">
-                            <a href="attendance.php?module_id=<?php echo $course['module_id']; ?>" class="btn btn-primary">
+                            <a href="../attendance/attendance.php?module_id=<?php echo $course['module_id']; ?>" class="btn btn-primary">
                                 <i class="fas fa-chart-bar"></i>
                                 View Attendance
                             </a>
                             <?php if ($course['absent_count'] > 0): ?>
-                                <a href="attendance.php?module_id=<?php echo $course['module_id']; ?>#justifications" class="btn btn-secondary">
+                                <a href="../attendance/attendance.php?module_id=<?php echo $course['module_id']; ?>#justifications" class="btn btn-secondary">
                                     <i class="fas fa-file-upload"></i>
                                     Submit Justification
                                 </a>

@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once '../includes/config.php';
+require_once '../../includes/config.php';
 
 // Check if user is logged in and is a teacher
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
-    header("Location: ../auth/login.php");
+    header("Location: ../../auth/login.php");
     exit();
 }
 
@@ -162,416 +162,20 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teaching Sessions - PAW Project</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* Teacher Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f8f9fa;
-            color: #2c3e50;
-            line-height: 1.6;
-        }
-        
-        .teacher-navbar {
-            background: linear-gradient(135deg, #2c5aa0 0%, #1e3a8a 100%);
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .navbar-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .navbar-brand a {
-            color: white;
-            text-decoration: none;
-            font-size: 1.5rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .navbar-menu {
-            display: flex;
-            gap: 2rem;
-        }
-        
-        .nav-link {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background 0.3s ease;
-        }
-        
-        .nav-link:hover, .nav-link.active {
-            background: rgba(255,255,255,0.2);
-        }
-        
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .logout-btn {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border: 1px solid white;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .logout-btn:hover {
-            background: white;
-            color: #2c5aa0;
-        }
-        
-        .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-        
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-        
-        .page-header h1 {
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-        
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-        
-        .btn-outline {
-            background: transparent;
-            color: #3b82f6;
-            border: 2px solid #3b82f6;
-        }
-        
-        .btn-outline:hover {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .btn-sm {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-        }
-        
-        .alert {
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #10b981;
-        }
-        
-        .filters-section {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
-        }
-        
-        .filters-title {
-            margin-bottom: 1rem;
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .filter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            align-items: end;
-        }
-        
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .form-group label {
-            font-weight: 500;
-            color: #374151;
-        }
-        
-        .form-control {
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        
-        .sessions-section {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-        
-        .section-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .section-header h2 {
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .sessions-list {
-            overflow: hidden;
-        }
-        
-        .session-item {
-            padding: 1.5rem;
-            border-bottom: 1px solid #e5e7eb;
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 1rem;
-            align-items: center;
-        }
-        
-        .session-item:last-child {
-            border-bottom: none;
-        }
-        
-        .session-info {
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            gap: 1rem;
-            align-items: center;
-        }
-        
-        .session-badge {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .session-badge.lecture { background: #3b82f6; }
-        .session-badge.lab { background: #10b981; }
-        .session-badge.tutorial { background: #f59e0b; }
-        .session-badge.exam { background: #ef4444; }
-        .session-badge.workshop { background: #8b5cf6; }
-        
-        .session-details h3 {
-            color: #2c3e50;
-            margin-bottom: 0.25rem;
-        }
-        
-        .session-meta {
-            display: flex;
-            gap: 1rem;
-            color: #6b7280;
-            font-size: 0.875rem;
-            margin-bottom: 0.25rem;
-        }
-        
-        .session-description {
-            color: #6b7280;
-            font-size: 0.875rem;
-        }
-        
-        .session-status {
-            text-align: right;
-        }
-        
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .status-badge.completed {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .status-badge.pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .session-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: #6b7280;
-        }
-        
-        .empty-state i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            color: #d1d5db;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-        
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-        
-        .modal-title {
-            color: #2c3e50;
-            margin: 0;
-        }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #6b7280;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-        
-        @media (max-width: 768px) {
-            .filter-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .session-info {
-                grid-template-columns: 1fr;
-            }
-            
-            .session-item {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="sessions.css">
 </head>
 <body>
     <nav class="teacher-navbar">
         <div class="navbar-container">
             <div class="navbar-brand">
-                <a href="dashboard.php">
+                <a href="../dashboard/dashboard.php">
                     <i class="fas fa-chalkboard-teacher"></i>
                     <span>PAW Teacher</span>
                 </a>
             </div>
             
             <div class="navbar-menu">
-                <a href="dashboard.php" class="nav-link">
+                <a href="../dashboard/dashboard.php" class="nav-link">
                     <i class="fas fa-home"></i>
                     Dashboard
                 </a>
@@ -579,7 +183,7 @@ try {
                     <i class="fas fa-calendar-alt"></i>
                     Sessions
                 </a>
-                <a href="attendance_summary.php" class="nav-link">
+                <a href="../attendance/attendance_summary.php" class="nav-link">
                     <i class="fas fa-chart-bar"></i>
                     Attendance Reports
                 </a>
@@ -587,7 +191,7 @@ try {
             
             <div class="user-menu">
                 <span class="user-name"><?php echo htmlspecialchars($teacher_name); ?></span>
-                <a href="../auth/logout.php" class="logout-btn">
+                <a href="../../auth/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </a>
@@ -725,7 +329,7 @@ try {
                     
                     <div class="session-actions">
                         <?php if (!$session['attendance_taken']): ?>
-                        <a href="mark_attendance.php?session_id=<?php echo $session['id']; ?>" class="btn btn-sm btn-primary">
+                        <a href="../attendance/mark_attendance.php?session_id=<?php echo $session['id']; ?>" class="btn btn-sm btn-primary">
                             <i class="fas fa-check"></i>
                             Take Attendance
                         </a>
@@ -824,43 +428,6 @@ try {
         <input type="hidden" name="session_id" id="deleteSessionId">
     </form>
 
-    <script>
-        function showCreateModal() {
-            document.getElementById('createModal').classList.add('show');
-            
-            // Set default date to today
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('session_date').value = today;
-        }
-        
-        function hideCreateModal() {
-            document.getElementById('createModal').classList.remove('show');
-        }
-        
-        function confirmDelete(sessionId) {
-            if (confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
-                document.getElementById('deleteSessionId').value = sessionId;
-                document.getElementById('deleteForm').submit();
-            }
-        }
-        
-        // Close modal when clicking outside
-        document.getElementById('createModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                hideCreateModal();
-            }
-        });
-        
-        // Form validation
-        document.querySelector('#createModal form').addEventListener('submit', function(e) {
-            const startTime = document.getElementById('start_time').value;
-            const endTime = document.getElementById('end_time').value;
-            
-            if (startTime >= endTime) {
-                e.preventDefault();
-                alert('End time must be after start time.');
-            }
-        });
-    </script>
+    <script src="sessions.js"></script>
 </body>
 </html>

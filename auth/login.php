@@ -17,7 +17,7 @@ if (isset($_SESSION['user_id'])) {
             header("Location: ../teacher/dashboard.php");
             break;
         case 'student':
-            header("Location: ../student/home.php");
+            header("Location: ../student/dashboard.php");
             break;
         default:
             header("Location: ../index.html");
@@ -69,10 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             header("Location: ../professor/dashboard.php");
                             break;
                         case 'teacher':
-                            header("Location: ../teacher/dashboard.php");
+                            header("Location: ../teacher/dashboard/dashboard.php");
                             break;
                         case 'student':
-                            header("Location: ../student/home.php");
+                            header("Location: ../student/dashboard.php");
                             break;
                         default:
                             header("Location: ../index.html");

@@ -1,10 +1,10 @@
-# 🎓 PAW Attendance Management System
+#  PAW Attendance Management System
 
 **University Attendance Tracking System for Teachers and Students**
 
 A modern, web-based attendance management system built with PHP and MySQL, designed for educational institutions to efficiently track and manage student attendance.
 
-## 🌟 What This System Does
+##  What This System Does
 
 This attendance management system provides a complete solution for:
 
@@ -12,20 +12,20 @@ This attendance management system provides a complete solution for:
 - **Students**: View attendance records and track progress
 - **Administrators**: Manage users, modules, and system oversight
 
-## 🚀 Key Features
+##  Key Features
 
-### For Teachers 👨‍🏫
+### For Teachers 
 - **Session Management**: Create and manage teaching sessions for assigned modules
 - **Attendance Marking**: Easy-to-use interface for marking student attendance
 - **Real-time Reports**: Generate attendance summaries and statistics
 - **Module-based Access**: Only access modules you're assigned to teach
 
-### For Students 👨‍🎓
+### For Students 
 - **Attendance Tracking**: View personal attendance records
 - **Progress Monitoring**: Track attendance percentages by course
 - **User-friendly Dashboard**: Clean interface showing attendance status
 
-### For Administrators 👨‍💼
+### For Administrators 
 - **Complete System Control**: Manage all users, modules, and system settings
 - **User Management**: Create and manage teacher and student accounts
 - **Module Assignment**: Assign teachers to specific modules
@@ -39,7 +39,7 @@ This attendance management system provides a complete solution for:
 - **Framework**: Bootstrap 5 for responsive design
 - **Icons**: Font Awesome for modern UI elements
 
-## 📦 Installation & Setup
+##  Installation & Setup
 
 ### Prerequisites
 - WAMP/XAMPP or similar local server environment
@@ -63,7 +63,7 @@ This attendance management system provides a complete solution for:
    - Visit `http://localhost/pawproject/`
    - Use demo accounts to explore the system
 
-## 🔑 Demo Accounts
+##  Demo Accounts
 
 | Role | Username | Password | Access |
 |------|----------|----------|--------|
@@ -71,7 +71,7 @@ This attendance management system provides a complete solution for:
 | **Teacher** | prof.kowalski | 123456 | Session & attendance management |
 | **Student** | soumia.lahlou | 123456 | Attendance viewing |
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 pawproject/
@@ -100,7 +100,7 @@ pawproject/
 └── index.html           # Landing page
 ```
 
-## 🎯 How to Use
+##  How to Use
 
 ### For Teachers
 1. **Login** with your teacher credentials
@@ -120,7 +120,7 @@ pawproject/
 3. **Module Management**: Create modules and assign teachers
 4. **System Overview**: Monitor overall system statistics
 
-## 🔐 Security Features
+##  Security Features
 
 - **Secure Authentication**: Password hashing with PHP's built-in functions
 - **Session Management**: Proper session handling and timeout
@@ -128,7 +128,7 @@ pawproject/
 - **SQL Injection Protection**: Prepared statements throughout
 - **Input Validation**: Server-side validation for all forms
 
-## 📊 Database Schema
+##  Database Schema
 
 The system uses a well-structured MySQL database with the following key tables:
 
@@ -182,7 +182,7 @@ The system is designed to be easily customizable:
 - Modern UI with Bootstrap
 - Consistent styling across all pages
 
-## 🎓 Academic Context
+##  Academic Context
 
 **Course**: Programmation Avancée Web (PAW)
 **Institution**: University Project
@@ -195,7 +195,7 @@ This project showcases:
 - Security best practices
 - User experience design
 
-## 🤝 Support
+##  Support
 
 For questions or issues:
 1. Check the database setup is correct
