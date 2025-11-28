@@ -152,19 +152,11 @@ The system features a modern, intuitive interface designed with user experience 
 
 <div align="center">
 
-<iframe 
-  style="border: 1px solid rgba(0, 0, 0, 0.1);" 
-  width="100%" 
-  height="450" 
-  src="https://embed.figma.com/design/kHJcp5XEVurUaMDZM4QHRG/paw-project?node-id=0-1&embed-host=share" 
-  allowfullscreen>
-</iframe>
+## 🎨 **[VIEW INTERACTIVE DESIGN PROTOTYPE →](https://www.figma.com/design/kHJcp5XEVurUaMDZM4QHRG/paw-project?node-id=0-1&t=A4H695Kfsf4Ck9BS-1)**
 
 </div>
 
-**[View Full Design on Figma →](https://www.figma.com/design/kHJcp5XEVurUaMDZM4QHRG/paw-project)**
-
-*Interactive Figma prototype showing the complete user interface design and user flow*
+*Click above to explore the complete UI/UX design and user flow on Figma*
 
 ## 🛠 Customization
 
