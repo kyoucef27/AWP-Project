@@ -173,7 +173,7 @@ The system is designed to be easily customizable:
 - User login/logout with role-based redirection
 - Secure session management
 - Password protection
-
+66q
 ✅ **Teacher Functionality**
 - Module-based access control
 - Session creation and management
