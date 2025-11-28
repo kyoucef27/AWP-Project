@@ -132,6 +132,10 @@ pawproject/
 
 The system uses a well-structured MySQL database with the following key tables:
 
+### Entity Relationship Diagram
+![Database ER Diagram](ERDIAGRAM/ERDIAGRAM.png)
+
+### Key Tables
 - **users**: System users (admin, teachers, students)
 - **modules**: Course modules/subjects
 - **teacher_modules**: Teacher-module assignments
@@ -139,6 +143,15 @@ The system uses a well-structured MySQL database with the following key tables:
 - **enrollments**: Student enrollment in modules
 - **teaching_sessions**: Individual class sessions
 - **attendance**: Attendance records
+
+## 🎨 UI/UX Design
+
+The system features a modern, intuitive interface designed with user experience in mind:
+
+### Design Prototype
+<iframe style="border: 1px solid rgba(0, 0, 0, 0.1);" width="800" height="450" src="https://embed.figma.com/design/kHJcp5XEVurUaMDZM4QHRG/paw-project?node-id=0-1&embed-host=share" allowfullscreen></iframe>
+
+*Interactive Figma prototype showing the complete user interface design and user flow*
 
 ## 🛠 Customization
 
