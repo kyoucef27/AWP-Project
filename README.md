@@ -149,7 +149,20 @@ The system uses a well-structured MySQL database with the following key tables:
 The system features a modern, intuitive interface designed with user experience in mind:
 
 ### Design Prototype
-<iframe style="border: 1px solid rgba(0, 0, 0, 0.1);" width="800" height="450" src="https://embed.figma.com/design/kHJcp5XEVurUaMDZM4QHRG/paw-project?node-id=0-1&embed-host=share" allowfullscreen></iframe>
+
+<div align="center">
+
+<iframe 
+  style="border: 1px solid rgba(0, 0, 0, 0.1);" 
+  width="100%" 
+  height="450" 
+  src="https://embed.figma.com/design/kHJcp5XEVurUaMDZM4QHRG/paw-project?node-id=0-1&embed-host=share" 
+  allowfullscreen>
+</iframe>
+
+</div>
+
+**[View Full Design on Figma →](https://www.figma.com/design/kHJcp5XEVurUaMDZM4QHRG/paw-project)**
 
 *Interactive Figma prototype showing the complete user interface design and user flow*
 
